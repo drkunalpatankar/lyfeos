@@ -1,0 +1,314 @@
+"use client";
+
+import { submitLog } from "@/actions/submit-log";
+import TimeSliders from "@/components/daily-log/TimeSliders";
+import ScoreDial from "@/components/daily-log/ScoreDial";
+import EmotionChipSelector from "@/components/daily-log/EmotionChipSelector";
+import VoiceToTextButton from "@/components/daily-log/VoiceToTextButton";
+import SettingsDialog from "@/components/layout/SettingsDialog";
+import { getSettings } from "@/actions/settings";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowRight, ArrowLeft, Check, Sparkles } from "lucide-react";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+
+type Step = 1 | 2 | 3;
+
+export default function Home() {
+    const [currentStep, setCurrentStep] = useState<Step>(1);
+
+    // Step 1: Time
+    const [metrics, setMetrics] = useState({ work: 8, personal: 8, health: 1, sleep: 7 });
+
+    // Step 2: Work reflection
+    const [workScore, setWorkScore] = useState(5);
+    const [workEmotions, setWorkEmotions] = useState<string[]>([]);
+    const [workLearning, setWorkLearning] = useState("");
+    const [workImprovement, setWorkImprovement] = useState("");
+
+    // Step 3: Personal reflection
+    const [personalScore, setPersonalScore] = useState(5);
+    const [personalEmotions, setPersonalEmotions] = useState<string[]>([]);
+    const [personalMoment, setPersonalMoment] = useState("");
+    const [personalImprovement, setPersonalImprovement] = useState("");
+
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Settings State
+    const [language, setLanguage] = useState("en");
+    const [style, setStyle] = useState("normal");
+
+    // Fetch settings on mount
+
+    useEffect(() => {
+        getSettings().then(s => {
+            setLanguage(s.voice_lang);
+            setStyle(s.style);
+        });
+    }, []);
+
+    const handleSubmit = async () => {
+        setIsSubmitting(true);
+        try {
+            const result = await submitLog({
+                date: new Date().toISOString().split('T')[0],
+                metrics,
+                work: {
+                    score: workScore,
+                    learning: workLearning,
+                    improvement: workImprovement,
+                    tags: workEmotions
+                },
+                personal: {
+                    score: personalScore,
+                    moment: personalMoment,
+                    improvement: personalImprovement,
+                    tags: personalEmotions
+                }
+            });
+
+            if (result.error) {
+                toast.error(result.error);
+            } else {
+                toast.success("✨ Day captured. Rest well.");
+                setTimeout(() => window.location.reload(), 1500);
+            }
+        } catch (e) {
+            console.error(e);
+            toast.error("Something went wrong");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    return (
+        <main className="relative min-h-screen overflow-hidden bg-mindful-gradient">
+            {/* Ambient background */}
+            <div className="fixed inset-0 bg-warm-glow opacity-40 pointer-events-none" />
+            <div className="fixed top-20 left-10 w-64 h-64 bg-amber-500/20 rounded-full blur-3xl animate-breathe-slow" />
+            <div className="fixed bottom-20 right-10 w-80 h-80 bg-rose-500/15 rounded-full blur-3xl animate-breathe" />
+
+            <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-4 pb-24">
+                <div className="w-full max-w-md space-y-8 py-12">
+
+                    {/* Header */}
+                    <motion.div
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-center space-y-3"
+                    >
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="w-10" /> {/* Spacer for balance */}
+                            <div className="flex items-center gap-2">
+                                <Sparkles className="w-5 h-5 text-amber-400 animate-pulse" />
+                                <h1 className="text-3xl font-light tracking-wide text-amber-100">LyFeOS</h1>
+                                <Sparkles className="w-5 h-5 text-rose-400 animate-pulse" />
+                            </div>
+                            <SettingsDialog />
+                        </div>
+                        <p className="text-base text-amber-200/70 font-light">
+                            Reflect on your day
+                        </p>
+                    </motion.div>
+
+                    {/* Step Indicator */}
+                    <div className="flex justify-center gap-2">
+                        {[1, 2, 3].map((step) => (
+                            <div
+                                key={step}
+                                className={cn(
+                                    "h-1 rounded-full transition-all duration-300",
+                                    step === currentStep ? "w-12 bg-amber-400" : "w-8 bg-amber-400/20",
+                                    step < currentStep && "bg-emerald-400"
+                                )}
+                            />
+                        ))}
+                    </div>
+
+                    {/* Step Content */}
+                    <AnimatePresence mode="wait">
+                        {currentStep === 1 && (
+                            <motion.div
+                                key="step1"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                className="glass-warm rounded-3xl p-8 shadow-2xl space-y-6"
+                            >
+                                <h2 className="text-lg font-light text-amber-100">How did you spend today?</h2>
+                                <TimeSliders onChange={setMetrics} />
+                            </motion.div>
+                        )}
+
+                        {currentStep === 2 && (
+                            <motion.div
+                                key="step2"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                className="glass-warm rounded-3xl p-8 shadow-2xl space-y-8"
+                            >
+                                <h2 className="text-lg font-light text-amber-100">Work Reflection</h2>
+
+                                <ScoreDial label="Work" colorClass="text-blue-400" onChange={setWorkScore} initialValue={workScore} />
+
+                                <EmotionChipSelector type="work" selected={workEmotions} onChange={setWorkEmotions} />
+
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-sm font-light text-amber-200/70">
+                                            What did you learn today? <span className="text-amber-400/50">*</span>
+                                        </label>
+                                        <VoiceToTextButton
+                                            onTranscript={(text) => setWorkLearning(prev => prev + " " + text)}
+                                            language={language}
+                                            model={style === 'medical' ? 'medical' : 'nova-3'}
+                                        />
+                                    </div>
+                                    <textarea
+                                        value={workLearning}
+                                        onChange={(e) => setWorkLearning(e.target.value)}
+                                        placeholder="Key takeaway, insight, or lesson..."
+                                        className="w-full h-24 px-4 py-3 bg-black/20 border border-amber-200/10 rounded-xl text-amber-100 placeholder:text-amber-200/30 focus:outline-none focus:border-amber-400/40 resize-none"
+                                    />
+                                    <div className="text-xs text-amber-200/40 text-right">
+                                        {workLearning.length} characters {workLearning.length > 200 && "• Detailed"}
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-sm font-light text-amber-200/70">
+                                            What could improve? <span className="text-amber-200/40">(optional)</span>
+                                        </label>
+                                        <VoiceToTextButton
+                                            onTranscript={(text) => setWorkImprovement(prev => prev + " " + text)}
+                                            language={language}
+                                            model={style === 'medical' ? 'medical' : 'nova-3'}
+                                        />
+                                    </div>
+                                    <textarea
+                                        value={workImprovement}
+                                        onChange={(e) => setWorkImprovement(e.target.value)}
+                                        placeholder="Process, skill, or habit to work on..."
+                                        className="w-full h-20 px-4 py-3 bg-black/20 border border-amber-200/10 rounded-xl text-amber-100 placeholder:text-amber-200/30 focus:outline-none focus:border-amber-400/40 resize-none"
+                                    />
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {currentStep === 3 && (
+                            <motion.div
+                                key="step3"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                className="glass-warm rounded-3xl p-8 shadow-2xl space-y-8"
+                            >
+                                <h2 className="text-lg font-light text-amber-100">Personal Reflection</h2>
+
+                                <ScoreDial label="Life" colorClass="text-rose-400" onChange={setPersonalScore} initialValue={personalScore} />
+
+                                <EmotionChipSelector type="personal" selected={personalEmotions} onChange={setPersonalEmotions} />
+
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-sm font-light text-amber-200/70">
+                                            What was meaningful today? <span className="text-amber-400/50">*</span>
+                                        </label>
+                                        <VoiceToTextButton
+                                            onTranscript={(text) => setPersonalMoment(prev => prev + " " + text)}
+                                            language={language}
+                                            model={style === 'medical' ? 'medical' : 'nova-3'}
+                                        />
+                                    </div>
+                                    <textarea
+                                        value={personalMoment}
+                                        onChange={(e) => setPersonalMoment(e.target.value)}
+                                        placeholder="A moment, connection, or experience..."
+                                        className="w-full h-24 px-4 py-3 bg-black/20 border border-amber-200/10 rounded-xl text-amber-100 placeholder:text-amber-200/30 focus:outline-none focus:border-amber-400/40 resize-none"
+                                    />
+                                    <div className="text-xs text-amber-200/40 text-right">
+                                        {personalMoment.length} characters {personalMoment.length > 200 && "• Detailed"}
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-sm font-light text-amber-200/70">
+                                            What could improve? <span className="text-amber-200/40">(optional)</span>
+                                        </label>
+                                        <VoiceToTextButton
+                                            onTranscript={(text) => setPersonalImprovement(prev => prev + " " + text)}
+                                            language={language}
+                                            model={style === 'medical' ? 'medical' : 'nova-3'}
+                                        />
+                                    </div>
+                                    <textarea
+                                        value={personalImprovement}
+                                        onChange={(e) => setPersonalImprovement(e.target.value)}
+                                        placeholder="Relationship, health, or habit..."
+                                        className="w-full h-20 px-4 py-3 bg-black/20 border border-amber-200/10 rounded-xl text-amber-100 placeholder:text-amber-200/30 focus:outline-none focus:border-amber-400/40 resize-none"
+                                    />
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    {/* Navigation Buttons */}
+                    <div className="flex gap-4">
+                        {currentStep > 1 && (
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => setCurrentStep((currentStep - 1) as Step)}
+                                className="flex-1 py-4 bg-white/5 border border-amber-200/20 text-amber-200 rounded-full font-light flex items-center justify-center gap-2"
+                            >
+                                <ArrowLeft className="w-4 h-4" />
+                                Back
+                            </motion.button>
+                        )}
+
+                        {currentStep < 3 ? (
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => setCurrentStep((currentStep + 1) as Step)}
+                                className="flex-1 py-4 bg-gradient-to-r from-amber-500 to-rose-500 text-white rounded-full font-light flex items-center justify-center gap-2"
+                            >
+                                Next
+                                <ArrowRight className="w-4 h-4" />
+                            </motion.button>
+                        ) : (
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                disabled={isSubmitting || !workLearning || !personalMoment}
+                                onClick={handleSubmit}
+                                className="flex-1 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full font-light flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isSubmitting ? (
+                                    <>
+                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        Saving...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Check className="w-4 h-4" />
+                                        Complete Reflection
+                                    </>
+                                )}
+                            </motion.button>
+                        )}
+                    </div>
+
+                    {/* Footer */}
+                    <p className="text-center text-xs text-amber-200/40 font-light">
+                        Step {currentStep} of 3 • Take your time
+                    </p>
+                </div>
+            </div>
+        </main>
+    );
+}
