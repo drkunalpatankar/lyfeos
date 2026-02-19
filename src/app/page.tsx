@@ -77,7 +77,7 @@ export default function Home() {
     };
 
     return (
-        <main className="relative min-h-screen overflow-hidden bg-mindful-gradient">
+        <main className="relative min-h-screen bg-mindful-gradient">
             {/* Ambient background */}
             <div className="fixed inset-0 bg-warm-glow opacity-40 pointer-events-none" />
             <div className="fixed top-20 left-10 w-64 h-64 bg-amber-500/20 rounded-full blur-3xl animate-breathe-slow" />

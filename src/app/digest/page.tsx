@@ -136,7 +136,7 @@ export default function DigestPage() {
         <main className="min-h-screen bg-mindful-gradient text-amber-100 relative overflow-hidden">
             <div className="fixed inset-0 bg-warm-glow opacity-20 pointer-events-none" />
 
-            <div className="relative z-10 max-w-3xl mx-auto px-4 py-8 space-y-8">
+            <div className="relative z-10 max-w-3xl mx-auto px-5 py-8 space-y-8">
 
                 {/* Header */}
                 <header className="flex items-center justify-between">
