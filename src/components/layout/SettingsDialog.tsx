@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import * as Dialog from "@radix-ui/react-dialog";
-import { Settings, X, Globe, Stethoscope, Check } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Settings, X, Globe, Stethoscope, Check, LogOut } from "lucide-react";
+import { motion } from "framer-motion";
 import { updateSettings, getSettings, type Language, type Style } from "@/actions/settings";
+import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
 export default function SettingsDialog() {
@@ -12,6 +14,7 @@ export default function SettingsDialog() {
     const [lang, setLang] = useState<Language>("en");
     const [style, setStyle] = useState<Style>("normal");
     const [loading, setLoading] = useState(false);
+    const router = useRouter();
 
     // Fetch initial settings
     useEffect(() => {
@@ -35,6 +38,13 @@ export default function SettingsDialog() {
         await updateSettings({ voice_lang: lang, style });
         setLoading(false);
         setOpen(false);
+    };
+
+    const handleLogout = async () => {
+        const supabase = createClient();
+        await supabase.auth.signOut();
+        setOpen(false);
+        router.push("/login");
     };
 
     return (
@@ -171,6 +181,17 @@ export default function SettingsDialog() {
                                 className="px-6 py-2 bg-white/10 hover:bg-white/20 text-amber-100 rounded-full text-sm font-medium transition-colors disabled:opacity-50"
                             >
                                 {loading ? "Saving..." : "Save Preferences"}
+                            </button>
+                        </div>
+
+                        {/* Divider + Logout */}
+                        <div className="mt-6 pt-5 border-t border-white/5">
+                            <button
+                                onClick={handleLogout}
+                                className="w-full flex items-center justify-center gap-2 py-2.5 text-sm text-red-400/70 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all"
+                            >
+                                <LogOut className="w-4 h-4" />
+                                <span>Sign Out</span>
                             </button>
                         </div>
                     </motion.div>

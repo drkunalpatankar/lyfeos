@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { Toaster } from "sonner";
 import BottomNav from "@/components/layout/BottomNav";
@@ -12,6 +12,23 @@ const inter = Inter({
 export const metadata: Metadata = {
     title: "LyFeOS - High Performance Life Analytics",
     description: "Journaling as Performance Analytics",
+    manifest: "/manifest.json",
+    appleWebApp: {
+        capable: true,
+        statusBarStyle: "black-translucent",
+        title: "LifeOS",
+    },
+    icons: {
+        apple: "/icon.png",
+    },
+};
+
+export const viewport: Viewport = {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+    themeColor: "#0a0a0a",
 };
 
 export default function RootLayout({
@@ -22,6 +39,29 @@ export default function RootLayout({
     return (
         <html lang="en" className="dark" suppressHydrationWarning>
             <body className={inter.className} suppressHydrationWarning>
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{
+                        __html: JSON.stringify({
+                            "@context": "https://schema.org",
+                            "@type": "SoftwareApplication",
+                            "name": "LifeOS",
+                            "applicationCategory": "LifestyleApplication",
+                            "operatingSystem": "Web",
+                            "offers": {
+                                "@type": "Offer",
+                                "price": "0",
+                                "priceCurrency": "USD"
+                            },
+                            "description": "High-Performance Life Intelligence System helping you track metrics, reflect on days, and get weekly AI coaching.",
+                            "aggregateRating": {
+                                "@type": "AggregateRating",
+                                "ratingValue": "5",
+                                "ratingCount": "1"
+                            }
+                        })
+                    }}
+                />
                 {children}
                 <BottomNav />
                 <Toaster
