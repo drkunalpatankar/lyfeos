@@ -1,8 +1,7 @@
 "use client";
 
 import { submitLog } from "@/actions/submit-log";
-import TimeSliders from "@/components/daily-log/TimeSliders";
-import ScoreDial from "@/components/daily-log/ScoreDial";
+import VibeSelector from "@/components/daily-log/VibeSelector";
 import EmotionChipSelector from "@/components/daily-log/EmotionChipSelector";
 import VoiceToTextButton from "@/components/daily-log/VoiceToTextButton";
 import SettingsDialog from "@/components/layout/SettingsDialog";
@@ -13,22 +12,19 @@ import { ArrowRight, ArrowLeft, Check, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-type Step = 1 | 2 | 3;
+type Step = 1 | 2;
 
 export default function Home() {
     const [currentStep, setCurrentStep] = useState<Step>(1);
 
-    // Step 1: Time
-    const [metrics, setMetrics] = useState({ work: 8, personal: 8, health: 1, sleep: 7 });
-
-    // Step 2: Work reflection
-    const [workScore, setWorkScore] = useState(5);
+    // Step 1: Work reflection
+    const [workScore, setWorkScore] = useState(6);
     const [workEmotions, setWorkEmotions] = useState<string[]>([]);
     const [workLearning, setWorkLearning] = useState("");
     const [workImprovement, setWorkImprovement] = useState("");
 
-    // Step 3: Personal reflection
-    const [personalScore, setPersonalScore] = useState(5);
+    // Step 2: Personal reflection
+    const [personalScore, setPersonalScore] = useState(6);
     const [personalEmotions, setPersonalEmotions] = useState<string[]>([]);
     const [personalMoment, setPersonalMoment] = useState("");
     const [personalImprovement, setPersonalImprovement] = useState("");
@@ -38,8 +34,6 @@ export default function Home() {
     // Settings State
     const [language, setLanguage] = useState("en");
     const [style, setStyle] = useState("normal");
-
-    // Fetch settings on mount
 
     useEffect(() => {
         getSettings().then(s => {
@@ -53,7 +47,7 @@ export default function Home() {
         try {
             const result = await submitLog({
                 date: new Date().toISOString().split('T')[0],
-                metrics,
+                metrics: { work: 0, personal: 0, health: 0, sleep: 0 },
                 work: {
                     score: workScore,
                     learning: workLearning,
@@ -114,7 +108,7 @@ export default function Home() {
 
                     {/* Step Indicator */}
                     <div className="flex justify-center gap-2">
-                        {[1, 2, 3].map((step) => (
+                        {[1, 2].map((step) => (
                             <div
                                 key={step}
                                 className={cn(
@@ -134,24 +128,11 @@ export default function Home() {
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -20 }}
-                                className="glass-warm rounded-3xl p-8 shadow-2xl space-y-6"
-                            >
-                                <h2 className="text-lg font-light text-amber-100">How did you spend today?</h2>
-                                <TimeSliders onChange={setMetrics} />
-                            </motion.div>
-                        )}
-
-                        {currentStep === 2 && (
-                            <motion.div
-                                key="step2"
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -20 }}
                                 className="glass-warm rounded-3xl p-8 shadow-2xl space-y-8"
                             >
                                 <h2 className="text-lg font-light text-amber-100">Work Reflection</h2>
 
-                                <ScoreDial label="Work" colorClass="text-blue-400" onChange={setWorkScore} initialValue={workScore} />
+                                <VibeSelector type="work" value={workScore} onChange={setWorkScore} />
 
                                 <EmotionChipSelector type="work" selected={workEmotions} onChange={setWorkEmotions} />
 
@@ -198,9 +179,9 @@ export default function Home() {
                             </motion.div>
                         )}
 
-                        {currentStep === 3 && (
+                        {currentStep === 2 && (
                             <motion.div
-                                key="step3"
+                                key="step2"
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -20 }}
@@ -208,7 +189,7 @@ export default function Home() {
                             >
                                 <h2 className="text-lg font-light text-amber-100">Personal Reflection</h2>
 
-                                <ScoreDial label="Life" colorClass="text-rose-400" onChange={setPersonalScore} initialValue={personalScore} />
+                                <VibeSelector type="personal" value={personalScore} onChange={setPersonalScore} />
 
                                 <EmotionChipSelector type="personal" selected={personalEmotions} onChange={setPersonalEmotions} />
 
@@ -257,12 +238,12 @@ export default function Home() {
                     </AnimatePresence>
 
                     {/* Navigation Buttons */}
-                    <div className={currentStep === 3 ? "flex flex-col-reverse gap-3 sm:flex-row sm:gap-4" : "flex gap-4"}>
+                    <div className={currentStep === 2 ? "flex flex-col-reverse gap-3 sm:flex-row sm:gap-4" : "flex gap-4"}>
                         {currentStep > 1 && (
                             <motion.button
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
-                                onClick={() => setCurrentStep((currentStep - 1) as Step)}
+                                onClick={() => setCurrentStep(1)}
                                 className="w-full sm:flex-1 py-4 bg-white/5 border border-amber-200/20 text-amber-200 rounded-full font-light flex items-center justify-center gap-2"
                             >
                                 <ArrowLeft className="w-4 h-4" />
@@ -270,11 +251,11 @@ export default function Home() {
                             </motion.button>
                         )}
 
-                        {currentStep < 3 ? (
+                        {currentStep < 2 ? (
                             <motion.button
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
-                                onClick={() => setCurrentStep((currentStep + 1) as Step)}
+                                onClick={() => setCurrentStep(2)}
                                 className="flex-1 py-4 bg-gradient-to-r from-amber-500 to-rose-500 text-white rounded-full font-light flex items-center justify-center gap-2"
                             >
                                 Next
@@ -305,7 +286,7 @@ export default function Home() {
 
                     {/* Footer */}
                     <p className="text-center text-xs text-amber-200/40 font-light">
-                        Step {currentStep} of 3 • Take your time
+                        Step {currentStep} of 2 • Take your time
                     </p>
                 </div>
             </div>
