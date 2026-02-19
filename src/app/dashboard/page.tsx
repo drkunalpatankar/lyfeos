@@ -72,7 +72,7 @@ export default function DashboardPage() {
     }, []);
 
     return (
-        <main className="min-h-screen bg-mindful-gradient text-amber-100 relative overflow-hidden">
+        <main className="min-h-screen bg-mindful-gradient text-amber-100 relative overflow-x-hidden">
             {/* Ambient Background */}
             <div className="fixed inset-0 bg-warm-glow opacity-30 pointer-events-none" />
             <div className="fixed top-20 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl animate-breathe-slow" />
