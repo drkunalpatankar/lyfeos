@@ -96,7 +96,6 @@ export default function SettingsDialog() {
                                         </div>
                                         <div>
                                             <div className="text-sm font-medium">English</div>
-                                            <div className="text-[10px] opacity-60">Global (Nova-3)</div>
                                         </div>
                                         {lang === "en" && <Check className="w-4 h-4 ml-auto text-amber-400" />}
                                     </button>
@@ -115,7 +114,6 @@ export default function SettingsDialog() {
                                         </div>
                                         <div>
                                             <div className="text-sm font-medium">Hindi</div>
-                                            <div className="text-[10px] opacity-60">Regional</div>
                                         </div>
                                         {lang === "hi" && <Check className="w-4 h-4 ml-auto text-amber-400" />}
                                     </button>
@@ -165,7 +163,7 @@ export default function SettingsDialog() {
                                         <div>
                                             <div className="text-sm font-medium">Clinical</div>
                                             <div className="text-[10px] opacity-60">
-                                                {lang === 'hi' ? "English Only" : "Health Focused (Nova-2-Medical)"}
+                                                {lang === 'hi' ? "English Only" : "For medical professionals"}
                                             </div>
                                         </div>
                                         {style === "medical" && <Check className="w-4 h-4 ml-auto text-blue-400" />}

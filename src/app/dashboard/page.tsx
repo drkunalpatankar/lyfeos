@@ -65,34 +65,31 @@ export default function DashboardPage() {
 
             <div className="relative z-10 max-w-5xl mx-auto space-y-12">
 
-                {/* Header */}
-                <header className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-3xl font-light tracking-wide flex items-center gap-3">
-                            <TrendingUp className="w-8 h-8 text-emerald-400" />
-                            Your Journey
-                        </h1>
-                        <p className="text-amber-200/60 mt-1 font-light">
-                            Visualizing your path to high performance
-                        </p>
-                    </div>
+                {/* Sticky Header */}
+                <header className="sticky top-0 z-20 bg-mindful-gradient/95 backdrop-blur-md pb-4 -mx-6 px-6 md:-mx-12 md:px-12 pt-2 border-b border-white/5">
+                    <h1 className="text-3xl font-light tracking-wide flex items-center gap-3">
+                        <TrendingUp className="w-8 h-8 text-emerald-400" />
+                        Your Journey
+                    </h1>
+                    <p className="text-amber-200/60 mt-1 font-light text-sm">
+                        Visualizing your path to high performance
+                    </p>
 
-                    <div className="flex gap-4">
+                    <div className="flex gap-3 mt-4">
                         <Link
                             href="/digest"
-                            className="bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2 rounded-full flex items-center gap-2 transition-transform hover:scale-105"
+                            className="flex-1 sm:flex-none bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2.5 rounded-full flex items-center justify-center gap-2 transition-all hover:scale-105 text-sm"
                         >
                             <Sparkles className="w-4 h-4 text-amber-400" />
-                            <span className="text-sm">Weekly Digest</span>
+                            Weekly Digest
                         </Link>
 
                         <Link
                             href="/"
-                            className="bg-amber-500/20 hover:bg-amber-500/30 text-amber-100 px-4 py-2 rounded-full flex items-center gap-2 transition-transform hover:scale-105"
+                            className="flex-1 sm:flex-none bg-amber-500/20 hover:bg-amber-500/30 text-amber-100 px-4 py-2.5 rounded-full flex items-center justify-center gap-2 transition-all hover:scale-105 text-sm"
                         >
                             <Calendar className="w-4 h-4" />
-                            <span className="text-sm">Log Today</span>
-                            <ChevronRight className="w-4 h-4" />
+                            Log Today
                         </Link>
                     </div>
                 </header>

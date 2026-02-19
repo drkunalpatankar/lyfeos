@@ -40,7 +40,7 @@ export async function POST(request: Request) {
         // Map preferences to Deepgram models
         let model = "nova-3";
         if (modelPref === "medical") {
-            model = "nova-2-medical";
+            model = "nova-3-medical";
         }
 
         // Send to Deepgram for transcription

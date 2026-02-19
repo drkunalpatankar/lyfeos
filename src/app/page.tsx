@@ -257,13 +257,13 @@ export default function Home() {
                     </AnimatePresence>
 
                     {/* Navigation Buttons */}
-                    <div className="flex gap-4">
+                    <div className={currentStep === 3 ? "flex flex-col-reverse gap-3 sm:flex-row sm:gap-4" : "flex gap-4"}>
                         {currentStep > 1 && (
                             <motion.button
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
                                 onClick={() => setCurrentStep((currentStep - 1) as Step)}
-                                className="flex-1 py-4 bg-white/5 border border-amber-200/20 text-amber-200 rounded-full font-light flex items-center justify-center gap-2"
+                                className="w-full sm:flex-1 py-4 bg-white/5 border border-amber-200/20 text-amber-200 rounded-full font-light flex items-center justify-center gap-2"
                             >
                                 <ArrowLeft className="w-4 h-4" />
                                 Back
@@ -286,7 +286,7 @@ export default function Home() {
                                 whileTap={{ scale: 0.98 }}
                                 disabled={isSubmitting || !workLearning || !personalMoment}
                                 onClick={handleSubmit}
-                                className="flex-1 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full font-light flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full sm:flex-1 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full font-light flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {isSubmitting ? (
                                     <>
