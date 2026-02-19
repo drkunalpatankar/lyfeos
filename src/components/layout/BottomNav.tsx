@@ -19,7 +19,7 @@ export default function BottomNav() {
 
     return (
         <nav className="fixed bottom-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-t border-white/5 safe-area-bottom">
-            <div className="flex items-center justify-around max-w-md mx-auto h-16">
+            <div className="grid grid-cols-3 h-16 w-full">
                 {navItems.map((item) => {
                     const isActive = pathname === item.href;
                     const Icon = item.icon;
@@ -28,7 +28,7 @@ export default function BottomNav() {
                             key={item.href}
                             href={item.href}
                             className={cn(
-                                "flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all",
+                                "flex flex-col items-center justify-center gap-1 transition-all",
                                 isActive
                                     ? "text-amber-400"
                                     : "text-amber-200/40 hover:text-amber-200/70"
