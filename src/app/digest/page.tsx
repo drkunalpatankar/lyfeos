@@ -91,11 +91,11 @@ export default function DigestPage() {
     const [weekRange, setWeekRange] = useState("");
     const [error, setError] = useState("");
 
-    const handleGenerate = async () => {
+    const handleGenerate = async (forceRegenerate = false) => {
         setLoading(true);
         setError("");
         try {
-            const result = await generateWeeklyDigest();
+            const result = await generateWeeklyDigest(forceRegenerate);
             if (result.error) {
                 setError(result.error);
             } else {
@@ -163,7 +163,7 @@ export default function DigestPage() {
                             </p>
                         </div>
                         <button
-                            onClick={handleGenerate}
+                            onClick={() => handleGenerate()}
                             className="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-8 py-3 rounded-full font-medium tracking-wide shadow-lg hover:scale-105 transition-all flex items-center gap-3 mx-auto"
                         >
                             <Zap className="w-4 h-4" />
@@ -192,7 +192,7 @@ export default function DigestPage() {
                         <div className="flex items-center justify-between">
                             <span className="text-xs text-amber-200/40 uppercase tracking-widest">{weekRange}</span>
                             <button
-                                onClick={handleGenerate}
+                                onClick={() => handleGenerate(true)}
                                 disabled={loading}
                                 className="text-xs text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1 disabled:opacity-50"
                             >
@@ -261,14 +261,14 @@ export default function DigestPage() {
                         {report.pattern_insights.length > 0 && (
                             <section className="space-y-3">
                                 <h2 className="text-xs uppercase tracking-widest text-amber-200/40 font-bold px-1">Pattern Intelligence</h2>
-                                <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory -mx-4 px-4 scrollbar-none">
+                                <div className="space-y-3">
                                     {report.pattern_insights.map((insight, i) => (
                                         <motion.div
                                             key={i}
                                             initial={{ opacity: 0, y: 10 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: i * 0.1 }}
-                                            className="glass-warm rounded-2xl p-5 border border-white/5 min-w-[280px] snap-start flex-shrink-0"
+                                            className="glass-warm rounded-2xl p-5 border border-white/5"
                                         >
                                             <div className="flex items-start gap-3">
                                                 <div className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">

@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { model, INTELLIGENCE_SYSTEM_PROMPT } from "@/lib/gemini";
 import { startOfWeek, endOfWeek, format } from "date-fns";
 
+const MIN_LOGS_REQUIRED = 3;
+
 export interface WeeklyReport {
     time_analysis: {
         work_percentage: number;
@@ -28,15 +30,37 @@ export interface WeeklyReport {
     executive_summary: string;
 }
 
-export async function generateWeeklyDigest() {
+export async function generateWeeklyDigest(forceRegenerate = false) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) return { error: "Unauthorized" };
 
     const today = new Date();
-    const start = startOfWeek(today, { weekStartsOn: 0 });
+    const start = startOfWeek(today, { weekStartsOn: 0 }); // Sunday
     const end = endOfWeek(today, { weekStartsOn: 0 });
+    const startDateStr = format(start, "yyyy-MM-dd");
+    const endDateStr = format(end, "yyyy-MM-dd");
+
+    // ── Guard: Check if report already exists for this week ──
+    if (!forceRegenerate) {
+        const { data: existing } = await supabase
+            .from("weekly_reports")
+            .select("metrics_json, week_start_date, week_end_date")
+            .eq("user_id", user.id)
+            .eq("week_start_date", startDateStr)
+            .eq("week_end_date", endDateStr)
+            .single();
+
+        if (existing?.metrics_json) {
+            return {
+                success: true,
+                report: existing.metrics_json as WeeklyReport,
+                week_range: `${existing.week_start_date} to ${existing.week_end_date}`,
+                cached: true,
+            };
+        }
+    }
 
     // 1. Fetch all logs + reflections for this week
     const { data: logs, error: logsError } = await supabase
@@ -53,8 +77,8 @@ export async function generateWeeklyDigest() {
             )
         `)
         .eq("user_id", user.id)
-        .gte("date", format(start, "yyyy-MM-dd"))
-        .lte("date", format(end, "yyyy-MM-dd"))
+        .gte("date", startDateStr)
+        .lte("date", endDateStr)
         .order("date", { ascending: true });
 
     if (logsError) {
@@ -64,6 +88,13 @@ export async function generateWeeklyDigest() {
 
     if (!logs || logs.length === 0) {
         return { error: "No logs found for this week. Start logging to generate intelligence." };
+    }
+
+    // ── Guard: Minimum logs required ──
+    if (logs.length < MIN_LOGS_REQUIRED) {
+        return {
+            error: `You need at least ${MIN_LOGS_REQUIRED} days of logs this week to generate intelligence. Currently logged: ${logs.length} day${logs.length === 1 ? "" : "s"}.`
+        };
     }
 
     // 2. Aggregate data into structured payload
@@ -134,7 +165,7 @@ export async function generateWeeklyDigest() {
     }
 
     const weeklyPayload = {
-        week_range: `${format(start, "yyyy-MM-dd")} to ${format(end, "yyyy-MM-dd")}`,
+        week_range: `${startDateStr} to ${endDateStr}`,
         days_logged: logs.length,
         scoring_system: "3-point vibe scale: 3 (Tough/Draining), 6 (Steady/Okay), 9 (Crushing It/Fulfilling)",
         daily_entries: dailyEntries,
@@ -163,10 +194,7 @@ export async function generateWeeklyDigest() {
             return { error: "Failed to parse AI response" };
         }
 
-        // 4. Persist to DB
-        const startDateStr = format(start, "yyyy-MM-dd");
-        const endDateStr = format(end, "yyyy-MM-dd");
-
+        // 4. Persist to DB (delete existing then insert)
         await supabase
             .from("weekly_reports")
             .delete()
@@ -186,12 +214,6 @@ export async function generateWeeklyDigest() {
 
         if (saveError) {
             console.error("Save Error:", saveError);
-            // Still return the report even if save fails
-            return {
-                success: true,
-                report: reportData,
-                week_range: weeklyPayload.week_range,
-            };
         }
 
         return {

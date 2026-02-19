@@ -9,7 +9,7 @@ if (!apiKey) {
 const genAI = new GoogleGenerativeAI(apiKey);
 
 export const model = genAI.getGenerativeModel({
-  model: "gemini-2.5-pro-preview-05-06",
+  model: "gemini-3-pro-preview",
   generationConfig: {
     responseMimeType: "application/json"
   }
