@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 
 interface SubmitLogParams {
     date: string; // YYYY-MM-DD
-    metrics: {
+    metrics?: {
         work: number;
         personal: number;
         health: number;
@@ -18,7 +18,7 @@ interface SubmitLogParams {
         tags: string[];
     };
     personal: {
-        score: number; // mapped from personal step score
+        score: number;
         moment: string;
         improvement: string;
         tags: string[];
@@ -44,15 +44,17 @@ export async function submitLog(data: SubmitLogParams) {
         [Personal Improvement] ${data.personal.improvement}
     `.trim();
 
+    const metrics = data.metrics || { work: 0, personal: 0, health: 0, sleep: 0 };
+
     const { data: log, error: logError } = await supabase
         .from("daily_logs")
         .upsert({
             user_id: user.id,
             date: data.date,
-            work_hours: data.metrics.work,
-            personal_hours: data.metrics.personal,
-            health_hours: data.metrics.health,
-            sleep_hours: data.metrics.sleep,
+            work_hours: metrics.work,
+            personal_hours: metrics.personal,
+            health_hours: metrics.health,
+            sleep_hours: metrics.sleep,
             work_score: data.work.score,
             personal_score: data.personal.score,
             transcript: fullTranscript,
@@ -64,7 +66,7 @@ export async function submitLog(data: SubmitLogParams) {
         console.error("Values attempted:", {
             user_id: user.id,
             date: data.date,
-            work_hours: data.metrics.work,
+            work_hours: metrics.work,
             transcript_length: fullTranscript.length
         });
         console.error("FULL DB ERROR:", JSON.stringify(logError, null, 2));

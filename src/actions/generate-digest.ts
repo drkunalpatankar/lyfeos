@@ -43,10 +43,6 @@ export async function generateWeeklyDigest() {
         .from("daily_logs")
         .select(`
             date,
-            work_hours,
-            personal_hours,
-            health_hours,
-            sleep_hours,
             work_score,
             personal_score,
             reflections (
@@ -71,62 +67,80 @@ export async function generateWeeklyDigest() {
     }
 
     // 2. Aggregate data into structured payload
-    const workScores: number[] = [];
-    const personalScores: number[] = [];
+    const dailyEntries: Array<{
+        date: string;
+        work_vibe: string;
+        personal_vibe: string;
+        work_score: number;
+        personal_score: number;
+        work_emotions: string[];
+        personal_emotions: string[];
+        work_learning: string;
+        personal_learning: string;
+        work_improvement: string;
+        personal_improvement: string;
+    }> = [];
+
     const workSentiments: string[] = [];
     const personalSentiments: string[] = [];
-    const workLearnings: string[] = [];
-    const personalLearnings: string[] = [];
-    const workImprovements: string[] = [];
-    const personalImprovements: string[] = [];
-    let totalWork = 0, totalPersonal = 0, totalHealth = 0, totalSleep = 0;
+
+    const vibeLabel = (score: number, type: "work" | "personal") => {
+        if (type === "work") {
+            if (score <= 4) return "Tough Day";
+            if (score <= 7) return "Steady";
+            return "Crushing It";
+        } else {
+            if (score <= 4) return "Draining";
+            if (score <= 7) return "Okay";
+            return "Fulfilling";
+        }
+    };
 
     for (const log of logs) {
-        workScores.push(log.work_score || 0);
-        personalScores.push(log.personal_score || 0);
-        totalWork += Number(log.work_hours) || 0;
-        totalPersonal += Number(log.personal_hours) || 0;
-        totalHealth += Number(log.health_hours) || 0;
-        totalSleep += Number(log.sleep_hours) || 0;
+        const entry: any = {
+            date: log.date,
+            work_score: log.work_score || 6,
+            personal_score: log.personal_score || 6,
+            work_vibe: vibeLabel(log.work_score || 6, "work"),
+            personal_vibe: vibeLabel(log.personal_score || 6, "personal"),
+            work_emotions: [],
+            personal_emotions: [],
+            work_learning: "",
+            personal_learning: "",
+            work_improvement: "",
+            personal_improvement: "",
+        };
 
         for (const ref of (log.reflections || [])) {
             const r = ref as any;
             if (r.type === "work") {
-                if (r.sentiment_tags) workSentiments.push(...r.sentiment_tags);
-                if (r.learning) workLearnings.push(r.learning);
-                if (r.improvement) workImprovements.push(r.improvement);
+                if (r.sentiment_tags) {
+                    entry.work_emotions = r.sentiment_tags;
+                    workSentiments.push(...r.sentiment_tags);
+                }
+                if (r.learning) entry.work_learning = r.learning;
+                if (r.improvement) entry.work_improvement = r.improvement;
             } else if (r.type === "personal") {
-                if (r.sentiment_tags) personalSentiments.push(...r.sentiment_tags);
-                if (r.learning) personalLearnings.push(r.learning);
-                if (r.improvement) personalImprovements.push(r.improvement);
+                if (r.sentiment_tags) {
+                    entry.personal_emotions = r.sentiment_tags;
+                    personalSentiments.push(...r.sentiment_tags);
+                }
+                if (r.learning) entry.personal_learning = r.learning;
+                if (r.improvement) entry.personal_improvement = r.improvement;
             }
         }
+
+        dailyEntries.push(entry);
     }
 
     const weeklyPayload = {
         week_range: `${format(start, "yyyy-MM-dd")} to ${format(end, "yyyy-MM-dd")}`,
         days_logged: logs.length,
-        time_distribution: {
-            total_work_hours: totalWork,
-            total_personal_hours: totalPersonal,
-            total_health_hours: totalHealth,
-            total_sleep_hours: totalSleep,
-        },
-        daily_scores: {
-            work_scores: workScores,
-            personal_scores: personalScores,
-        },
-        sentiments: {
+        scoring_system: "3-point vibe scale: 3 (Tough/Draining), 6 (Steady/Okay), 9 (Crushing It/Fulfilling)",
+        daily_entries: dailyEntries,
+        aggregated_sentiments: {
             work: [...new Set(workSentiments)],
             personal: [...new Set(personalSentiments)],
-        },
-        learnings: {
-            work: workLearnings,
-            personal: personalLearnings,
-        },
-        improvements: {
-            work: workImprovements,
-            personal: personalImprovements,
         },
     };
 
@@ -172,14 +186,17 @@ export async function generateWeeklyDigest() {
 
         if (saveError) {
             console.error("Save Error:", saveError);
-            throw saveError;
+            // Still return the report even if save fails
+            return {
+                success: true,
+                report: reportData,
+                week_range: weeklyPayload.week_range,
+            };
         }
 
-        // Also return the raw time data for the donut chart (client-side rendering)
         return {
             success: true,
             report: reportData,
-            time_data: weeklyPayload.time_distribution,
             week_range: weeklyPayload.week_range,
         };
     } catch (error: any) {

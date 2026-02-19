@@ -11,46 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
-// ─── Donut Chart Component (Pure SVG) ────────────────────────────
-function DonutChart({ data }: { data: { label: string; value: number; color: string }[] }) {
-    const total = data.reduce((sum, d) => sum + d.value, 0);
-    if (total === 0) return null;
 
-    const radius = 80;
-    const strokeWidth = 24;
-    const circumference = 2 * Math.PI * radius;
-    let accumulated = 0;
-
-    return (
-        <div className="relative w-52 h-52 mx-auto">
-            <svg viewBox="0 0 200 200" className="w-full h-full -rotate-90">
-                {data.map((segment, i) => {
-                    const percentage = segment.value / total;
-                    const dashLength = circumference * percentage;
-                    const dashOffset = circumference * accumulated;
-                    accumulated += percentage;
-                    return (
-                        <circle
-                            key={i}
-                            cx="100" cy="100" r={radius}
-                            fill="none"
-                            stroke={segment.color}
-                            strokeWidth={strokeWidth}
-                            strokeDasharray={`${dashLength} ${circumference - dashLength}`}
-                            strokeDashoffset={-dashOffset}
-                            strokeLinecap="round"
-                            className="transition-all duration-700"
-                        />
-                    );
-                })}
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-3xl font-light text-amber-100">{total.toFixed(0)}h</span>
-                <span className="text-[10px] text-amber-200/50 uppercase tracking-widest">Total</span>
-            </div>
-        </div>
-    );
-}
 
 // ─── Life Balance Gauge (SVG Arc) ────────────────────────────────
 function BalanceGauge({ score }: { score: number }) {
@@ -127,7 +88,6 @@ function EmotionDot({ emotion, type }: { emotion: string; type: "work" | "person
 export default function DigestPage() {
     const [loading, setLoading] = useState(false);
     const [report, setReport] = useState<WeeklyReport | null>(null);
-    const [timeData, setTimeData] = useState<any>(null);
     const [weekRange, setWeekRange] = useState("");
     const [error, setError] = useState("");
 
@@ -140,7 +100,6 @@ export default function DigestPage() {
                 setError(result.error);
             } else {
                 setReport(result.report as WeeklyReport);
-                setTimeData(result.time_data);
                 setWeekRange(result.week_range || "");
             }
         } catch (e) {
@@ -251,34 +210,13 @@ export default function DigestPage() {
                             </p>
                         </section>
 
-                        {/* ─── 2. TIME DISTRIBUTION ─── */}
-                        {timeData && (
-                            <section className="glass-warm rounded-3xl p-8 border border-white/5">
-                                <h2 className="text-xs uppercase tracking-widest text-amber-200/40 font-bold mb-6">Time Distribution</h2>
-                                <DonutChart data={[
-                                    { label: "Work", value: timeData.total_work_hours, color: "#60a5fa" },
-                                    { label: "Personal", value: timeData.total_personal_hours, color: "#f472b6" },
-                                    { label: "Health", value: timeData.total_health_hours, color: "#34d399" },
-                                    { label: "Sleep", value: timeData.total_sleep_hours, color: "#a78bfa" },
-                                ]} />
-                                <div className="flex justify-center gap-6 mt-6">
-                                    {[
-                                        { label: "Work", color: "bg-blue-400", value: timeData.total_work_hours },
-                                        { label: "Personal", color: "bg-pink-400", value: timeData.total_personal_hours },
-                                        { label: "Health", color: "bg-emerald-400", value: timeData.total_health_hours },
-                                        { label: "Sleep", color: "bg-violet-400", value: timeData.total_sleep_hours },
-                                    ].map(item => (
-                                        <div key={item.label} className="flex items-center gap-2 text-xs text-amber-200/60">
-                                            <div className={cn("w-2 h-2 rounded-full", item.color)} />
-                                            <span>{item.label} {item.value}h</span>
-                                        </div>
-                                    ))}
-                                </div>
-                                {report.time_analysis.imbalance_flag && (
-                                    <p className="text-xs text-amber-400 mt-4 text-center">
-                                        ⚠ Work allocation at {report.time_analysis.work_percentage}%
-                                    </p>
-                                )}
+                        {/* ─── 2. WORK–LIFE INSIGHT ─── */}
+                        {report.time_analysis?.insight && (
+                            <section className="glass-warm rounded-3xl p-6 border border-white/5">
+                                <h2 className="text-xs uppercase tracking-widest text-amber-200/40 font-bold mb-4">Work–Life Balance</h2>
+                                <p className="text-sm text-amber-100/80 leading-relaxed">
+                                    {report.time_analysis.insight}
+                                </p>
                             </section>
                         )}
 

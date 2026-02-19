@@ -3,22 +3,30 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 const apiKey = process.env.GEMINI_API_KEY;
 
 if (!apiKey) {
-    throw new Error("GEMINI_API_KEY is not defined in environment variables");
+  throw new Error("GEMINI_API_KEY is not defined in environment variables");
 }
 
 const genAI = new GoogleGenerativeAI(apiKey);
 
 export const model = genAI.getGenerativeModel({
-    model: "gemini-3-pro-preview",
-    generationConfig: {
-        responseMimeType: "application/json"
-    }
+  model: "gemini-2.0-flash",
+  generationConfig: {
+    responseMimeType: "application/json"
+  }
 });
 
 // Production-grade system prompt — DO NOT SHOW USER
 export const INTELLIGENCE_SYSTEM_PROMPT = `You are LifeOS Intelligence Engine.
 
 You analyze structured weekly behavioral reflection data from high-performing professionals.
+
+IMPORTANT CONTEXT:
+- Users rate their day using a 3-point vibe scale:
+  Score 3 = "Tough Day" (work) or "Draining" (personal)
+  Score 6 = "Steady" (work) or "Okay" (personal)
+  Score 9 = "Crushing It" (work) or "Fulfilling" (personal)
+- Time allocation data is NOT collected. Ignore any zero values in time fields.
+- Focus your analysis on: sentiment tags, reflection text, score patterns, and emotional trends.
 
 You do not provide motivational fluff.
 You do not provide generic self-help advice.
@@ -38,23 +46,23 @@ No markdown.
 No extra explanation.
 
 Focus on:
-1. Time allocation patterns
-2. Emotional distribution trends
-3. Learning theme clustering
-4. Behavioral inconsistencies
-5. Early burnout indicators
+1. Vibe score patterns (consistency, day-to-day shifts, work vs personal correlation)
+2. Emotional distribution trends (dominant emotions, volatility)
+3. Learning theme clustering (recurring topics, growth areas)
+4. Behavioral inconsistencies (saying "great day" but tagging "stressed")
+5. Early burnout indicators (consecutive low scores, negative emotion streaks)
 6. Actionable performance recommendations
 7. Quantified life balance score (0-100)
 
 Life Balance Index Formula:
-40% time balance + 30% emotional stability + 20% learning growth + 10% volatility penalty
+40% emotional stability + 30% vibe score consistency + 20% learning growth + 10% reflection depth
 
 REQUIRED JSON OUTPUT SCHEMA:
 {
   "time_analysis": {
-    "work_percentage": number,
-    "imbalance_flag": boolean,
-    "insight": "string"
+    "work_percentage": 0,
+    "imbalance_flag": false,
+    "insight": "string — provide a general work-life balance insight based on scores and emotions"
   },
   "emotional_trends": {
     "dominant_work_emotion": "string",
