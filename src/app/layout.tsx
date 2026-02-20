@@ -23,7 +23,7 @@ export const metadata: Metadata = {
         siteName: "LyFeOS",
         images: [
             {
-                url: `${siteUrl}/og-image.png`,
+                url: `${siteUrl}/og-image.png?v=3`,
                 width: 1200,
                 height: 630,
                 alt: "LyFeOS — The Life Operating System",
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
         card: "summary_large_image",
         title: "LyFeOS — The Life Operating System",
         description: "Reflect. Analyze. Grow. AI-powered daily journaling and weekly intelligence.",
-        images: [`${siteUrl}/og-image.png`],
+        images: [`${siteUrl}/og-image.png?v=3`],
     },
     appleWebApp: {
         capable: true,
