@@ -75,7 +75,14 @@ export async function submitLog(data: SubmitLogParams) {
 
     if (!log) return { error: "Failed to create log entry" };
 
-    // 3. Insert Reflections (Qual Data)
+    // 3. Delete existing reflections for this log (prevents duplicates on re-submit)
+    await supabase
+        .from("reflections")
+        .delete()
+        .eq("log_id", log.id)
+        .eq("user_id", user.id);
+
+    // 4. Insert fresh reflections
 
     // Work Reflection
     const workReflectionPromise = supabase
@@ -111,5 +118,54 @@ export async function submitLog(data: SubmitLogParams) {
     if (personalResult.error) console.error("Personal Reflection Error:", personalResult.error);
 
     revalidatePath("/");
+    revalidatePath("/dashboard");
     return { success: true };
+}
+
+// Fetch a log + reflections for a specific date (used for edit mode)
+export async function getLogForDate(date: string) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { error: "Unauthorized" };
+
+    // Same-day lockout: only allow fetching today's log
+    const today = new Date().toISOString().split("T")[0];
+    if (date !== today) {
+        return { error: "Can only edit today's log" };
+    }
+
+    const { data: log } = await supabase
+        .from("daily_logs")
+        .select(`
+            id, date, work_score, personal_score,
+            reflections (
+                type, learning, improvement, sentiment_tags
+            )
+        `)
+        .eq("user_id", user.id)
+        .eq("date", date)
+        .single();
+
+    if (!log) return { error: "No log found for this date" };
+
+    const workRef = (log.reflections as any[])?.find((r: any) => r.type === "work");
+    const personalRef = (log.reflections as any[])?.find((r: any) => r.type === "personal");
+
+    return {
+        log: {
+            date: log.date,
+            work: {
+                score: log.work_score || 6,
+                learning: workRef?.learning || "",
+                improvement: workRef?.improvement || "",
+                tags: workRef?.sentiment_tags || [],
+            },
+            personal: {
+                score: log.personal_score || 6,
+                moment: personalRef?.learning || "",
+                improvement: personalRef?.improvement || "",
+                tags: personalRef?.sentiment_tags || [],
+            },
+        },
+    };
 }

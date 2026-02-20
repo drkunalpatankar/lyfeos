@@ -1,21 +1,29 @@
 "use client";
 
-import { submitLog } from "@/actions/submit-log";
+import { submitLog, getLogForDate } from "@/actions/submit-log";
 import VibeSelector from "@/components/daily-log/VibeSelector";
 import EmotionChipSelector from "@/components/daily-log/EmotionChipSelector";
 import VoiceToTextButton from "@/components/daily-log/VoiceToTextButton";
 import SettingsDialog from "@/components/layout/SettingsDialog";
 import { getSettings } from "@/actions/settings";
 import { useState, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, ArrowLeft, Check, Sparkles } from "lucide-react";
+import { ArrowRight, ArrowLeft, Check, Sparkles, X } from "lucide-react";
+import Link from "next/link";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 type Step = 1 | 2;
 
 export default function Home() {
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const editDate = searchParams.get("edit");
+    const isEditMode = !!editDate;
+
     const [currentStep, setCurrentStep] = useState<Step>(1);
+    const [editLoading, setEditLoading] = useState(false);
 
     // Step 1: Work reflection
     const [workScore, setWorkScore] = useState(6);
@@ -42,6 +50,35 @@ export default function Home() {
         });
     }, []);
 
+    // Edit mode: fetch existing log and pre-fill
+    useEffect(() => {
+        if (!editDate) return;
+        const today = new Date().toISOString().split("T")[0];
+        if (editDate !== today) {
+            toast.error("Can only edit today's log");
+            router.push("/dashboard");
+            return;
+        }
+        setEditLoading(true);
+        getLogForDate(editDate).then((result) => {
+            if (result.error || !result.log) {
+                toast.error(result.error || "Log not found");
+                router.push("/dashboard");
+                return;
+            }
+            const d = result.log;
+            setWorkScore(d.work.score);
+            setWorkEmotions(d.work.tags);
+            setWorkLearning(d.work.learning);
+            setWorkImprovement(d.work.improvement);
+            setPersonalScore(d.personal.score);
+            setPersonalEmotions(d.personal.tags);
+            setPersonalMoment(d.personal.moment);
+            setPersonalImprovement(d.personal.improvement);
+            setEditLoading(false);
+        });
+    }, [editDate, router]);
+
     const handleSubmit = async () => {
         setIsSubmitting(true);
         try {
@@ -65,8 +102,14 @@ export default function Home() {
             if (result.error) {
                 toast.error(result.error);
             } else {
-                toast.success("✨ Day captured. Rest well.");
-                setTimeout(() => window.location.reload(), 1500);
+                toast.success(isEditMode ? "✏️ Log updated." : "✨ Day captured. Rest well.");
+                setTimeout(() => {
+                    if (isEditMode) {
+                        router.push("/dashboard");
+                    } else {
+                        window.location.reload();
+                    }
+                }, 1500);
             }
         } catch (e) {
             console.error(e);
@@ -101,9 +144,18 @@ export default function Home() {
                             </div>
                             <SettingsDialog />
                         </div>
-                        <p className="text-base text-amber-200/70 font-light">
-                            Reflect on your day
-                        </p>
+                        {isEditMode ? (
+                            <div className="flex items-center justify-center gap-2">
+                                <span className="text-xs bg-amber-500/20 text-amber-300 px-3 py-1 rounded-full border border-amber-500/20">✏️ Editing today&apos;s log</span>
+                                <Link href="/dashboard" className="text-xs text-amber-200/40 hover:text-amber-200/70 transition-colors">
+                                    <X className="w-4 h-4" />
+                                </Link>
+                            </div>
+                        ) : (
+                            <p className="text-base text-amber-200/70 font-light">
+                                Reflect on your day
+                            </p>
+                        )}
                     </motion.div>
 
                     {/* Step Indicator */}
@@ -277,7 +329,7 @@ export default function Home() {
                                 ) : (
                                     <>
                                         <Check className="w-4 h-4" />
-                                        Complete Reflection
+                                        {isEditMode ? "Update Log" : "Complete Reflection"}
                                     </>
                                 )}
                             </motion.button>

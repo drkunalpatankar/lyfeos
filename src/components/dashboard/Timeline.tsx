@@ -2,9 +2,11 @@
 
 import { motion } from "framer-motion";
 import { DailyLog } from "@/app/dashboard/page";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, isToday } from "date-fns";
 import * as Tooltip from "@radix-ui/react-tooltip";
 import { cn } from "@/lib/utils";
+import { Pencil } from "lucide-react";
+import Link from "next/link";
 
 interface TimelineProps {
     logs: DailyLog[];
@@ -20,6 +22,7 @@ export default function Timeline({ logs }: TimelineProps) {
 
                 {logs.map((log, index) => {
                     const date = parseISO(log.date);
+                    const editable = isToday(date);
 
                     // Parse reflections
                     const workRef = log.reflections?.find(r => r.type === 'work');
@@ -42,6 +45,17 @@ export default function Timeline({ logs }: TimelineProps) {
                                 <span className="text-xs uppercase tracking-widest text-amber-500/60 font-medium">
                                     {format(date, "MMM")}
                                 </span>
+
+                                {/* Edit button — today only */}
+                                {editable && (
+                                    <Link
+                                        href={`/?edit=${log.date}`}
+                                        className="mt-2 flex items-center gap-1 text-[9px] uppercase tracking-widest text-amber-400/50 hover:text-amber-400 transition-colors"
+                                    >
+                                        <Pencil className="w-3 h-3" />
+                                        <span>Edit</span>
+                                    </Link>
+                                )}
 
                                 {/* Connector Dot */}
                                 <div className="absolute right-[-5px] top-[18px] w-3 h-3 bg-mindful-dark border-2 border-amber-500 rounded-full shadow-[0_0_10px_rgba(245,158,11,0.5)] group-hover:scale-125 transition-transform" />
@@ -70,7 +84,7 @@ export default function Timeline({ logs }: TimelineProps) {
                                                 </div>
                                             </div>
                                             <p className="text-sm text-gray-300 line-clamp-2 italic">
-                                                "{workRef?.learning || "No reflection logged"}"
+                                                &quot;{workRef?.learning || "No reflection logged"}&quot;
                                             </p>
                                         </div>
                                     </Tooltip.Trigger>
@@ -113,7 +127,7 @@ export default function Timeline({ logs }: TimelineProps) {
                                                 </div>
                                             </div>
                                             <p className="text-sm text-gray-300 line-clamp-2 italic">
-                                                "{personalRef?.learning || "No reflection logged"}"
+                                                &quot;{personalRef?.learning || "No reflection logged"}&quot;
                                             </p>
                                         </div>
                                     </Tooltip.Trigger>
