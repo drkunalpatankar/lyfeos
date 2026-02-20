@@ -6,6 +6,24 @@ import { startOfWeek, endOfWeek, format } from "date-fns";
 
 const MIN_LOGS_REQUIRED = 3;
 
+export interface IntentionEvaluation {
+    intention: string;
+    category: "work" | "personal";
+    status: "achieved" | "partial" | "missed";
+    evidence: string;
+    insight: string;
+}
+
+export interface IntentionScorecard {
+    total: number;
+    achieved: number;
+    partial: number;
+    missed: number;
+    completion_rate: number;
+    evaluations: IntentionEvaluation[];
+    meta_insight: string;
+}
+
 export interface WeeklyReport {
     time_analysis: {
         work_percentage: number;
@@ -23,6 +41,7 @@ export interface WeeklyReport {
         frequency: number;
         implication: string;
     }>;
+    intention_scorecard: IntentionScorecard | null;
     pattern_insights: string[];
     risk_flags: string[];
     recommendations: string[];
@@ -37,7 +56,7 @@ export async function generateWeeklyDigest(forceRegenerate = false) {
     if (!user) return { error: "Unauthorized" };
 
     const today = new Date();
-    const start = startOfWeek(today, { weekStartsOn: 0 }); // Sunday
+    const start = startOfWeek(today, { weekStartsOn: 0 });
     const end = endOfWeek(today, { weekStartsOn: 0 });
     const startDateStr = format(start, "yyyy-MM-dd");
     const endDateStr = format(end, "yyyy-MM-dd");
@@ -97,7 +116,14 @@ export async function generateWeeklyDigest(forceRegenerate = false) {
         };
     }
 
-    // 2. Aggregate data into structured payload
+    // 2. Fetch weekly intentions
+    const { data: intentions } = await supabase
+        .from("weekly_intentions")
+        .select("id, text, category, status")
+        .eq("user_id", user.id)
+        .eq("week_start_date", startDateStr);
+
+    // 3. Aggregate data into structured payload
     const dailyEntries: Array<{
         date: string;
         work_vibe: string;
@@ -164,7 +190,7 @@ export async function generateWeeklyDigest(forceRegenerate = false) {
         dailyEntries.push(entry);
     }
 
-    const weeklyPayload = {
+    const weeklyPayload: any = {
         week_range: `${startDateStr} to ${endDateStr}`,
         days_logged: logs.length,
         scoring_system: "3-point vibe scale: 3 (Tough/Draining), 6 (Steady/Okay), 9 (Crushing It/Fulfilling)",
@@ -175,7 +201,15 @@ export async function generateWeeklyDigest(forceRegenerate = false) {
         },
     };
 
-    // 3. Call Gemini with system prompt + structured data
+    // Include intentions if any exist
+    if (intentions && intentions.length > 0) {
+        weeklyPayload.weekly_intentions = intentions.map((i: any) => ({
+            text: i.text,
+            category: i.category,
+        }));
+    }
+
+    // 4. Call Gemini with system prompt + structured data
     const userPrompt = `Analyze the following weekly behavioral data and return the structured JSON report.\n\n${JSON.stringify(weeklyPayload, null, 2)}`;
 
     try {
@@ -194,7 +228,24 @@ export async function generateWeeklyDigest(forceRegenerate = false) {
             return { error: "Failed to parse AI response" };
         }
 
-        // 4. Persist to DB (delete existing then insert)
+        // 5. Write intention statuses back to DB
+        if (reportData.intention_scorecard?.evaluations && intentions && intentions.length > 0) {
+            for (const evaluation of reportData.intention_scorecard.evaluations) {
+                // Match by text similarity
+                const matchedIntention = intentions.find((i: any) =>
+                    i.text.toLowerCase().includes(evaluation.intention.toLowerCase().slice(0, 20)) ||
+                    evaluation.intention.toLowerCase().includes(i.text.toLowerCase().slice(0, 20))
+                );
+                if (matchedIntention) {
+                    await supabase
+                        .from("weekly_intentions")
+                        .update({ status: evaluation.status })
+                        .eq("id", (matchedIntention as any).id);
+                }
+            }
+        }
+
+        // 6. Persist report to DB
         await supabase
             .from("weekly_reports")
             .delete()

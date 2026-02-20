@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { PenLine, TrendingUp, Brain } from "lucide-react";
+import { PenLine, TrendingUp, Brain, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
     { href: "/", label: "Log", icon: PenLine },
+    { href: "/intentions", label: "Intentions", icon: Target },
     { href: "/dashboard", label: "Timeline", icon: TrendingUp },
-    { href: "/digest", label: "Intelligence", icon: Brain },
+    { href: "/digest", label: "Intel", icon: Brain },
 ];
 
 export default function BottomNav() {
@@ -19,7 +20,7 @@ export default function BottomNav() {
 
     return (
         <nav className="fixed bottom-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-t border-white/5 safe-area-bottom">
-            <div className="grid grid-cols-3 h-16 w-full">
+            <div className="grid grid-cols-4 h-16 w-full">
                 {navItems.map((item) => {
                     const isActive = pathname === item.href;
                     const Icon = item.icon;
@@ -35,7 +36,7 @@ export default function BottomNav() {
                             )}
                         >
                             <Icon className={cn("w-5 h-5", isActive && "drop-shadow-[0_0_6px_rgba(245,158,11,0.5)]")} />
-                            <span className="text-[10px] uppercase tracking-widest font-medium">{item.label}</span>
+                            <span className="text-[9px] uppercase tracking-widest font-medium">{item.label}</span>
                         </Link>
                     );
                 })}

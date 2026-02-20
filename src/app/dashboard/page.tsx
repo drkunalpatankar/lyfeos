@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Sparkles, TrendingUp, Calendar } from "lucide-react";
+import { Sparkles, TrendingUp, Calendar, Target } from "lucide-react";
 import Link from "next/link";
 import Timeline from "@/components/dashboard/Timeline";
 import { cn } from "@/lib/utils";
@@ -110,6 +110,19 @@ export default function DashboardPage() {
                         >
                             <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
                             {!scrolled && <span>Weekly Digest</span>}
+                        </Link>
+                        <Link
+                            href="/intentions"
+                            className={cn(
+                                "bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-200 rounded-full flex items-center justify-center transition-all active:scale-95",
+                                scrolled
+                                    ? "w-9 h-9"
+                                    : "flex-1 px-4 py-2.5 gap-2 text-sm"
+                            )}
+                            title="Set Intentions"
+                        >
+                            <Target className="w-4 h-4 shrink-0" />
+                            {!scrolled && <span>Intentions</span>}
                         </Link>
                         <Link
                             href="/"

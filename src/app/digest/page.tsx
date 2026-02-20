@@ -210,6 +210,73 @@ export default function DigestPage() {
                             </p>
                         </section>
 
+                        {/* ─── INTENTION SCORECARD ─── */}
+                        {report.intention_scorecard && (
+                            <section className="glass-warm rounded-3xl p-6 border border-white/5 space-y-5">
+                                <div className="flex items-center justify-between">
+                                    <h2 className="text-xs uppercase tracking-widest text-emerald-300/60 font-bold flex items-center gap-2">
+                                        <Target className="w-4 h-4 text-emerald-400" />
+                                        Intention Scorecard
+                                    </h2>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-2xl font-light text-emerald-400">{report.intention_scorecard.completion_rate}%</span>
+                                        <span className="text-[10px] text-amber-200/40">complete</span>
+                                    </div>
+                                </div>
+
+                                {/* Summary Stats */}
+                                <div className="grid grid-cols-3 gap-2 text-center">
+                                    <div className="bg-emerald-500/10 rounded-xl py-2">
+                                        <span className="text-lg font-light text-emerald-400">{report.intention_scorecard.achieved}</span>
+                                        <p className="text-[9px] text-emerald-300/50 uppercase">Achieved</p>
+                                    </div>
+                                    <div className="bg-amber-500/10 rounded-xl py-2">
+                                        <span className="text-lg font-light text-amber-400">{report.intention_scorecard.partial}</span>
+                                        <p className="text-[9px] text-amber-300/50 uppercase">Partial</p>
+                                    </div>
+                                    <div className="bg-red-500/10 rounded-xl py-2">
+                                        <span className="text-lg font-light text-red-400">{report.intention_scorecard.missed}</span>
+                                        <p className="text-[9px] text-red-300/50 uppercase">Missed</p>
+                                    </div>
+                                </div>
+
+                                {/* Per-Intention Evaluations */}
+                                <div className="space-y-3">
+                                    {report.intention_scorecard.evaluations.map((ev, i) => {
+                                        const statusIcon = ev.status === "achieved" ? "✅" : ev.status === "partial" ? "⚠️" : "❌";
+                                        const borderColor = ev.status === "achieved" ? "border-emerald-500/20" : ev.status === "partial" ? "border-amber-500/20" : "border-red-500/20";
+                                        return (
+                                            <motion.div
+                                                key={i}
+                                                initial={{ opacity: 0, y: 8 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: i * 0.08 }}
+                                                className={cn("bg-white/3 rounded-xl p-4 border space-y-2", borderColor)}
+                                            >
+                                                <div className="flex items-start gap-2">
+                                                    <span className="text-sm shrink-0">{statusIcon}</span>
+                                                    <p className="text-sm text-amber-100/90 font-medium">{ev.intention}</p>
+                                                </div>
+                                                <p className="text-xs text-amber-200/50 italic pl-6">{ev.evidence}</p>
+                                                {ev.insight && (
+                                                    <p className="text-xs text-amber-200/40 pl-6">{ev.insight}</p>
+                                                )}
+                                            </motion.div>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* Meta Insight */}
+                                {report.intention_scorecard.meta_insight && (
+                                    <div className="bg-emerald-500/5 rounded-xl p-4 border border-emerald-500/10">
+                                        <p className="text-xs text-emerald-200/70 leading-relaxed">
+                                            {report.intention_scorecard.meta_insight}
+                                        </p>
+                                    </div>
+                                )}
+                            </section>
+                        )}
+
                         {/* ─── 2. WORK–LIFE INSIGHT ─── */}
                         {report.time_analysis?.insight && (
                             <section className="glass-warm rounded-3xl p-6 border border-white/5">
