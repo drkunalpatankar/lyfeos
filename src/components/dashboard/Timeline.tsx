@@ -50,7 +50,7 @@ export default function Timeline({ logs }: TimelineProps) {
                                 {editable && (
                                     <Link
                                         href={`/?edit=${log.date}`}
-                                        className="mt-2 flex items-center gap-1 text-[9px] uppercase tracking-widest text-amber-400/50 hover:text-amber-400 transition-colors"
+                                        className="mt-3 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-amber-500/10 border border-amber-500/30 rounded-full text-[10px] uppercase font-semibold tracking-widest text-amber-400 hover:bg-amber-500/20 hover:scale-105 transition-all shadow-[0_0_10px_rgba(245,158,11,0.1)]"
                                     >
                                         <Pencil className="w-3 h-3" />
                                         <span>Edit</span>
@@ -69,8 +69,8 @@ export default function Timeline({ logs }: TimelineProps) {
                                     <Tooltip.Trigger asChild>
                                         <div className="glass-warm p-4 rounded-xl border border-white/5 hover:border-blue-400/30 transition-all cursor-default max-w-2xl bg-gradient-to-r from-blue-500/5 to-transparent">
                                             <div className="flex items-center gap-4 mb-2">
-                                                <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-300 font-bold text-sm">
-                                                    {log.work_score}
+                                                <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-xl shadow-[0_0_15px_rgba(59,130,246,0.15)]">
+                                                    {log.work_score === 3 ? "😓" : log.work_score === 9 ? "🔥" : "⚡"}
                                                 </div>
                                                 <span className="text-xs font-semibold text-blue-200/70 uppercase tracking-wider">Work Flow</span>
 
@@ -113,8 +113,8 @@ export default function Timeline({ logs }: TimelineProps) {
                                     <Tooltip.Trigger asChild>
                                         <div className="glass-warm p-4 rounded-xl border border-white/5 hover:border-rose-400/30 transition-all cursor-default max-w-2xl bg-gradient-to-r from-rose-500/5 to-transparent">
                                             <div className="flex items-center gap-4 mb-2">
-                                                <div className="w-8 h-8 rounded-full bg-rose-500/20 flex items-center justify-center text-rose-300 font-bold text-sm">
-                                                    {log.personal_score}
+                                                <div className="w-8 h-8 rounded-full bg-rose-500/20 flex items-center justify-center text-xl shadow-[0_0_15px_rgba(244,63,94,0.15)]">
+                                                    {log.personal_score === 3 ? "😔" : log.personal_score === 9 ? "✨" : "☁️"}
                                                 </div>
                                                 <span className="text-xs font-semibold text-rose-200/70 uppercase tracking-wider">Life Balance</span>
 

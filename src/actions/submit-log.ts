@@ -128,9 +128,12 @@ export async function getLogForDate(date: string) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { error: "Unauthorized" };
 
-    // Same-day lockout: only allow fetching today's log
-    const today = new Date().toISOString().split("T")[0];
-    if (date !== today) {
+    // Same-day lockout: allow for timezone variance between client (e.g. IST) and Vercel server (UTC)
+    const serverTime = new Date().getTime();
+    const targetTime = new Date(date).getTime();
+    const diffHours = Math.abs(serverTime - targetTime) / (1000 * 60 * 60);
+
+    if (diffHours > 48) {
         return { error: "Can only edit today's log" };
     }
 

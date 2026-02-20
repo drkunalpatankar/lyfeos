@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, ArrowLeft, Check, Sparkles, X } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
 type Step = 1 | 2;
@@ -61,7 +62,7 @@ function HomeContent() {
     // Edit mode: fetch existing log and pre-fill
     useEffect(() => {
         if (!editDate) return;
-        const today = new Date().toISOString().split("T")[0];
+        const today = format(new Date(), "yyyy-MM-dd");
         if (editDate !== today) {
             toast.error("Can only edit today's log");
             router.push("/dashboard");
