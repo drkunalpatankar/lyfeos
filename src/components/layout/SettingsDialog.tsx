@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import * as Dialog from "@radix-ui/react-dialog";
-import { Settings, X, Globe, Stethoscope, Check, LogOut } from "lucide-react";
+import { Settings, X, Globe, Stethoscope, Check, LogOut, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { deleteAccount } from "@/actions/delete-account";
 import { updateSettings, getSettings, type Language, type Style } from "@/actions/settings";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -14,6 +15,8 @@ export default function SettingsDialog() {
     const [lang, setLang] = useState<Language>("en");
     const [style, setStyle] = useState<Style>("normal");
     const [loading, setLoading] = useState(false);
+    const [deleteConfirm, setDeleteConfirm] = useState("");
+    const [deleting, setDeleting] = useState(false);
     const router = useRouter();
 
     // Fetch initial settings
@@ -183,13 +186,46 @@ export default function SettingsDialog() {
                         </div>
 
                         {/* Divider + Logout */}
-                        <div className="mt-6 pt-5 border-t border-white/5">
+                        <div className="mt-6 pt-5 border-t border-white/5 space-y-3">
                             <button
                                 onClick={handleLogout}
                                 className="w-full flex items-center justify-center gap-2 py-2.5 text-sm text-red-400/70 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all"
                             >
                                 <LogOut className="w-4 h-4" />
                                 <span>Sign Out</span>
+                            </button>
+                        </div>
+
+                        {/* Danger Zone */}
+                        <div className="mt-4 pt-4 border-t border-red-500/10 space-y-3">
+                            <label className="text-[10px] uppercase tracking-widest text-red-400/40 font-semibold">
+                                Danger Zone
+                            </label>
+                            <p className="text-[11px] text-red-200/30 leading-relaxed">
+                                Permanently delete your account and all data. This action cannot be undone. Type <span className="text-red-300/60 font-mono">DELETE</span> to confirm.
+                            </p>
+                            <input
+                                type="text"
+                                value={deleteConfirm}
+                                onChange={(e) => setDeleteConfirm(e.target.value)}
+                                placeholder='Type "DELETE" to confirm'
+                                className="w-full bg-red-500/5 border border-red-500/10 rounded-lg px-3 py-2 text-xs text-red-200/70 placeholder:text-red-200/20 focus:outline-none focus:border-red-500/30 font-mono"
+                            />
+                            <button
+                                disabled={deleteConfirm !== "DELETE" || deleting}
+                                onClick={async () => {
+                                    setDeleting(true);
+                                    const result = await deleteAccount();
+                                    if (result.success) {
+                                        setOpen(false);
+                                        router.push("/login");
+                                    }
+                                    setDeleting(false);
+                                }}
+                                className="w-full flex items-center justify-center gap-2 py-2.5 text-sm text-red-400 bg-red-500/10 hover:bg-red-500/20 rounded-xl transition-all disabled:opacity-30 disabled:cursor-not-allowed border border-red-500/20"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                                <span>{deleting ? "Deleting everything..." : "Delete Account Forever"}</span>
                             </button>
                         </div>
                     </motion.div>

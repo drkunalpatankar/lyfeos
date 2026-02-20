@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, ArrowRight, Mail, Lock, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -157,10 +158,19 @@ export default function LoginPage() {
                     </form>
                 </div>
 
-                <div className="text-center mt-6">
+                <div className="text-center mt-6 space-y-2">
                     <p className="text-xs text-amber-200/30 font-light">
                         Protected by mindful encryption
                     </p>
+                    <div className="flex items-center justify-center gap-3 text-[10px] text-amber-200/20">
+                        <Link href="/privacy" className="hover:text-amber-200/50 transition-colors">
+                            Privacy Policy
+                        </Link>
+                        <span>·</span>
+                        <Link href="/terms" className="hover:text-amber-200/50 transition-colors">
+                            Terms of Service
+                        </Link>
+                    </div>
                 </div>
             </motion.div>
         </main>
