@@ -63,7 +63,7 @@ export default function PrivacyPage() {
 
                     <section>
                         <h2 className="text-xs uppercase tracking-widest text-amber-400/60 font-semibold mb-3">Contact</h2>
-                        <p>For privacy inquiries, contact <span className="text-amber-300/80">kunal@lyfeos.app</span></p>
+                        <p>For privacy inquiries, contact <span className="text-amber-300/80">connect@lyfeos.in</span></p>
                     </section>
                 </div>
             </div>

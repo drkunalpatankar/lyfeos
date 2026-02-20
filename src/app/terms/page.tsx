@@ -70,7 +70,7 @@ export default function TermsPage() {
 
                     <section>
                         <h2 className="text-xs uppercase tracking-widest text-amber-400/60 font-semibold mb-3">Contact</h2>
-                        <p>Questions? Reach us at <span className="text-amber-300/80">kunal@lyfeos.app</span></p>
+                        <p>Questions? Reach us at <span className="text-amber-300/80">connect@lyfeos.in</span></p>
                     </section>
                 </div>
             </div>

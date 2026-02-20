@@ -15,8 +15,8 @@ const navItems = [
 export default function BottomNav() {
     const pathname = usePathname();
 
-    // Don't show on login page
-    if (pathname === "/login") return null;
+    // Don't show on public/legal pages
+    if (["/login", "/privacy", "/terms"].includes(pathname)) return null;
 
     return (
         <nav className="fixed bottom-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-t border-white/5 safe-area-bottom">
