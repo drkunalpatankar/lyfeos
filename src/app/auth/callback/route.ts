@@ -1,38 +1,32 @@
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
-import { NextResponse, type NextRequest } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+import { NextResponse } from "next/server";
 
-export async function GET(request: NextRequest) {
+export async function GET(request: Request) {
     const { searchParams, origin } = new URL(request.url);
     const code = searchParams.get("code");
     const next = searchParams.get("next") ?? "/";
 
     if (code) {
-        const response = NextResponse.redirect(`${origin}${next}`);
-
-        const supabase = createServerClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-            {
-                cookies: {
-                    get(name: string) {
-                        return request.cookies.get(name)?.value;
-                    },
-                    set(name: string, value: string, options: CookieOptions) {
-                        response.cookies.set({ name, value, ...options });
-                    },
-                    remove(name: string, options: CookieOptions) {
-                        response.cookies.set({ name, value: "", ...options });
-                    },
-                },
-            }
-        );
-
+        const supabase = await createClient();
         const { error } = await supabase.auth.exchangeCodeForSession(code);
 
         if (!error) {
-            return response;
+            const forwardedHost = request.headers.get("x-forwarded-host"); // Vercel load balancer Support
+            const isLocalEnv = process.env.NODE_ENV === "development";
+
+            if (isLocalEnv) {
+                return NextResponse.redirect(`${origin}${next}`);
+            } else if (forwardedHost) {
+                return NextResponse.redirect(`https://${forwardedHost}${next}`);
+            } else {
+                return NextResponse.redirect(`${origin}${next}`);
+            }
+        } else {
+            // Log error so we can see it in Vercel logs if it fails
+            console.error("Auth callback error:", error.message);
         }
     }
 
-    return NextResponse.redirect(`${origin}/login`);
+    // Return the user to login if there was no code or an error
+    return NextResponse.redirect(`${origin}/login?error=OAuth_Failed`);
 }
