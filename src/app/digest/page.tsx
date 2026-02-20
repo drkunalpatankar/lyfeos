@@ -205,13 +205,10 @@ export default function DigestPage() {
                         <section className="glass-warm rounded-3xl p-8 border border-white/5 text-center">
                             <h2 className="text-xs uppercase tracking-widest text-amber-200/40 font-bold mb-6">Life Balance Index</h2>
                             <BalanceGauge score={report.life_balance_index} />
-                            <p className="text-sm text-amber-200/60 mt-4 max-w-xs mx-auto">
-                                {report.time_analysis.insight}
-                            </p>
                         </section>
 
                         {/* ─── INTENTION SCORECARD ─── */}
-                        {report.intention_scorecard && (
+                        {report.intention_scorecard && report.intention_scorecard.evaluations && report.intention_scorecard.evaluations.length > 0 && (
                             <section className="glass-warm rounded-3xl p-6 border border-white/5 space-y-5">
                                 <div className="flex items-center justify-between">
                                     <h2 className="text-xs uppercase tracking-widest text-emerald-300/60 font-bold flex items-center gap-2">
@@ -277,33 +274,30 @@ export default function DigestPage() {
                             </section>
                         )}
 
-                        {/* ─── 2. WORK–LIFE INSIGHT ─── */}
-                        {report.time_analysis?.insight && (
-                            <section className="glass-warm rounded-3xl p-6 border border-white/5">
-                                <h2 className="text-xs uppercase tracking-widest text-amber-200/40 font-bold mb-4">Work–Life Balance</h2>
-                                <p className="text-sm text-amber-100/80 leading-relaxed">
-                                    {report.time_analysis.insight}
-                                </p>
-                            </section>
-                        )}
-
-                        {/* ─── 3. EMOTIONAL HEAT STRIP ─── */}
+                        {/* ─── 2. EMOTIONAL LANDSCAPE ─── */}
                         <section className="glass-warm rounded-3xl p-6 border border-white/5 space-y-4">
                             <h2 className="text-xs uppercase tracking-widest text-amber-200/40 font-bold">Emotional Landscape</h2>
 
                             <div className="space-y-3">
-                                <div>
-                                    <span className="text-[10px] text-blue-300/70 uppercase tracking-widest">Work — {report.emotional_trends.dominant_work_emotion}</span>
-                                    <div className="flex gap-2 mt-2">
-                                        <EmotionDot emotion={report.emotional_trends.dominant_work_emotion} type="work" />
+                                {report.emotional_trends.dominant_work_emotion && report.emotional_trends.dominant_work_emotion.toLowerCase() !== "neutral" && (
+                                    <div>
+                                        <span className="text-[10px] text-blue-300/70 uppercase tracking-widest">Work — {report.emotional_trends.dominant_work_emotion}</span>
+                                        <div className="flex gap-2 mt-2">
+                                            <EmotionDot emotion={report.emotional_trends.dominant_work_emotion} type="work" />
+                                        </div>
                                     </div>
-                                </div>
-                                <div>
-                                    <span className="text-[10px] text-rose-300/70 uppercase tracking-widest">Personal — {report.emotional_trends.dominant_personal_emotion}</span>
-                                    <div className="flex gap-2 mt-2">
-                                        <EmotionDot emotion={report.emotional_trends.dominant_personal_emotion} type="personal" />
+                                )}
+                                {report.emotional_trends.dominant_personal_emotion && report.emotional_trends.dominant_personal_emotion.toLowerCase() !== "neutral" && (
+                                    <div>
+                                        <span className="text-[10px] text-rose-300/70 uppercase tracking-widest">Personal — {report.emotional_trends.dominant_personal_emotion}</span>
+                                        <div className="flex gap-2 mt-2">
+                                            <EmotionDot emotion={report.emotional_trends.dominant_personal_emotion} type="personal" />
+                                        </div>
                                     </div>
-                                </div>
+                                )}
+                                {report.emotional_trends.dominant_work_emotion?.toLowerCase() === "neutral" && report.emotional_trends.dominant_personal_emotion?.toLowerCase() === "neutral" && (
+                                    <p className="text-xs text-amber-200/40 italic">Emotional data will surface as you log more days this week.</p>
+                                )}
                             </div>
 
                             <div className="flex items-center justify-between pt-2 border-t border-white/5">

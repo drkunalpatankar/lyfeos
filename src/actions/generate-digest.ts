@@ -25,11 +25,6 @@ export interface IntentionScorecard {
 }
 
 export interface WeeklyReport {
-    time_analysis: {
-        work_percentage: number;
-        imbalance_flag: boolean;
-        insight: string;
-    };
     emotional_trends: {
         dominant_work_emotion: string;
         dominant_personal_emotion: string;
