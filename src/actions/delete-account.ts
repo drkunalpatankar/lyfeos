@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 export async function deleteAccount() {
     const supabase = await createClient();
@@ -49,9 +50,22 @@ export async function deleteAccount() {
         .delete()
         .eq("user_id", user.id);
 
-    // 6. Delete auth user (uses admin API — requires service role key or RPC)
-    // Sign the user out — the auth user row stays (Supabase doesn't allow self-delete of auth.users from client)
-    // We'll sign out and leave the auth shell. All data is gone.
+    // 6. Delete auth user (uses admin API)
+    const supabaseAdmin = createSupabaseClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    const { error: adminError } = await supabaseAdmin.auth.admin.deleteUser(user.id);
+
+    if (adminError) {
+        console.error("Failed to delete auth identity:", adminError);
+        // We still sign out because the public data was deleted
+        await supabase.auth.signOut();
+        return { error: "Failed to delete authentication identity, but public data was wiped." };
+    }
+
+    // Sign the user out of the current session
     await supabase.auth.signOut();
 
     return { success: true };
