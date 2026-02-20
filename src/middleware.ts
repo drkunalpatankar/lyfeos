@@ -1,7 +1,15 @@
-import { type NextRequest } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 
 export async function middleware(request: NextRequest) {
+    // 1. Force domain normalization: redirect www.lyfeos.in to lyfeos.in
+    // This is CRITICAL to prevent Supabase OAuth redirect mismatch bugs and cookie dropping.
+    if (request.nextUrl.hostname === 'www.lyfeos.in') {
+        const url = request.nextUrl.clone()
+        url.hostname = 'lyfeos.in'
+        return NextResponse.redirect(url, { status: 308 })
+    }
+
     return await updateSession(request)
 }
 

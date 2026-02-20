@@ -33,11 +33,19 @@ export default function LoginPage() {
                 if (error) throw error;
                 router.push("/");
             } else {
+                const getAuthCallbackUrl = () => {
+                    const origin = window.location.origin;
+                    if (origin.includes("www.lyfeos.in")) {
+                        return "https://lyfeos.in/auth/callback";
+                    }
+                    return `${origin}/auth/callback`;
+                };
+
                 const { error } = await supabase.auth.signUp({
                     email,
                     password,
                     options: {
-                        emailRedirectTo: `${location.origin}/auth/callback`,
+                        emailRedirectTo: getAuthCallbackUrl(),
                     },
                 });
                 if (error) throw error;
@@ -54,10 +62,20 @@ export default function LoginPage() {
         setGoogleLoading(true);
         setMessage(null);
         try {
+            const getAuthCallbackUrl = () => {
+                const origin = window.location.origin;
+                // Supabase strictly expects lyfeos.in, not www.lyfeos.in. 
+                // If the user happens to be on www, rewrite the redirect URL to prevent the fallback loop.
+                if (origin.includes("www.lyfeos.in")) {
+                    return "https://lyfeos.in/auth/callback";
+                }
+                return `${origin}/auth/callback`;
+            };
+
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: "google",
                 options: {
-                    redirectTo: `${location.origin}/auth/callback`,
+                    redirectTo: getAuthCallbackUrl(),
                 },
             });
             if (error) throw error;
