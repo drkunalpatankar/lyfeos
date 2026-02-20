@@ -9,21 +9,21 @@ const inter = Inter({
     variable: "--font-inter",
 });
 
-const siteUrl = "https://lyfeos.app";
+const siteUrl = "https://lyfeos.in";
 
 export const metadata: Metadata = {
     title: "LyFeOS — The Life Operating System",
-    description: "Reflect. Analyze. Grow. AI-powered daily journaling and weekly intelligence for high performers.",
+    description: "Reflect. Analyze. Grow. AI-powered daily journaling and weekly intelligence.",
     manifest: "/manifest.json",
     metadataBase: new URL(siteUrl),
     openGraph: {
         title: "LyFeOS — The Life Operating System",
-        description: "Reflect. Analyze. Grow. AI-powered daily journaling and weekly intelligence for high performers.",
+        description: "Reflect. Analyze. Grow. AI-powered daily journaling and weekly intelligence.",
         url: siteUrl,
         siteName: "LyFeOS",
         images: [
             {
-                url: "/og-image.png?v=2",
+                url: `${siteUrl}/og-image.png`,
                 width: 1200,
                 height: 630,
                 alt: "LyFeOS — The Life Operating System",
@@ -35,8 +35,8 @@ export const metadata: Metadata = {
     twitter: {
         card: "summary_large_image",
         title: "LyFeOS — The Life Operating System",
-        description: "Reflect. Analyze. Grow.",
-        images: ["/og-image.png?v=2"],
+        description: "Reflect. Analyze. Grow. AI-powered daily journaling and weekly intelligence.",
+        images: [`${siteUrl}/og-image.png`],
     },
     appleWebApp: {
         capable: true,
