@@ -11,11 +11,9 @@ export async function deleteAccount() {
 
         if (!user) return { error: "Unauthorized" };
 
-        // Step 2: Create an ADMIN client using the service_role key
-        // This is REQUIRED because the anon key is subject to RLS (Row Level Security).
-        // If RLS policies don't explicitly allow DELETE, all .delete() calls
-        // silently succeed with 0 rows affected — the data stays untouched.
-        // The service_role key BYPASSES RLS entirely.
+        // Step 2: Create an ADMIN client using the service_role key.
+        // The service_role key BYPASSES Row Level Security entirely.
+        // Without it, delete operations silently return 0 rows affected.
         const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
         if (!serviceRoleKey) {
@@ -34,65 +32,76 @@ export async function deleteAccount() {
             }
         );
 
-        // Step 3: Cascade delete ALL user data using the admin client
-        // Order: reflections → weekly_reports → weekly_intentions → daily_logs → user_settings
+        // Step 3: Cascade delete ALL user data using the admin client.
+        //
+        // IMPORTANT: The database schema (SCHEMA.sql) defines these FK references:
+        //   - public.users.id             → auth.users(id)   [NO CASCADE]
+        //   - public.daily_logs.user_id   → auth.users(id)   [NO CASCADE]
+        //   - public.reflections.user_id  → auth.users(id)   [NO CASCADE]
+        //   - public.reflections.log_id   → public.daily_logs(id) [CASCADE]
+        //   - public.weekly_reports.user_id → auth.users(id)  [NO CASCADE]
+        //
+        // ALL of these must be deleted BEFORE auth.admin.deleteUser() or
+        // PostgreSQL will block the deletion with "Database error deleting user".
+        //
+        // Deletion order (children first, then parents):
+        //   reflections → weekly_reports → weekly_intentions → daily_logs → users
 
-        // 3a. Find all daily_log IDs for this user
-        const { data: logs, error: logsError } = await admin
-            .from("daily_logs")
-            .select("id")
+        // 3a. Delete ALL reflections for this user (by user_id, not log_id)
+        const { error: refError } = await admin
+            .from("reflections")
+            .delete()
             .eq("user_id", user.id);
+        if (refError) console.error("Error deleting reflections:", refError);
 
-        if (logsError) console.error("Error fetching logs:", logsError);
-
-        // 3b. Delete reflections linked to those logs
-        if (logs && logs.length > 0) {
-            const logIds = logs.map(l => l.id);
-            const { error: refError } = await admin
-                .from("reflections")
-                .delete()
-                .in("log_id", logIds);
-            if (refError) console.error("Error deleting reflections:", refError);
-        }
-
-        // 3c. Delete weekly reports
+        // 3b. Delete weekly reports
         const { error: wrError } = await admin
             .from("weekly_reports")
             .delete()
             .eq("user_id", user.id);
         if (wrError) console.error("Error deleting weekly_reports:", wrError);
 
-        // 3d. Delete weekly intentions
+        // 3c. Delete weekly intentions
         const { error: wiError } = await admin
             .from("weekly_intentions")
             .delete()
             .eq("user_id", user.id);
         if (wiError) console.error("Error deleting weekly_intentions:", wiError);
 
-        // 3e. Delete daily logs
+        // 3d. Delete daily logs
         const { error: dlError } = await admin
             .from("daily_logs")
             .delete()
             .eq("user_id", user.id);
         if (dlError) console.error("Error deleting daily_logs:", dlError);
 
-        // 3f. Delete user settings
-        const { error: usError } = await admin
+        // 3e. Delete from public.users (the profile/settings table)
+        // THIS IS THE CRITICAL ONE. public.users.id has a direct FK to auth.users(id)
+        // without ON DELETE CASCADE. If this row isn't removed first, PostgreSQL
+        // blocks the auth.users deletion entirely.
+        const { error: profileError } = await admin
+            .from("users")
+            .delete()
+            .eq("id", user.id);
+        if (profileError) console.error("Error deleting public.users:", profileError);
+
+        // 3f. Also try user_settings (in case it exists separately)
+        await admin
             .from("user_settings")
             .delete()
-            .eq("user_id", user.id);
-        if (usError) console.error("Error deleting user_settings:", usError);
+            .eq("user_id", user.id)
+            .then(() => { })
+            .catch(() => { }); // Ignore if table doesn't exist
 
         // Step 4: Delete the auth identity from auth.users
         const { error: adminError } = await admin.auth.admin.deleteUser(user.id);
         if (adminError) {
             console.error("Failed to delete auth identity:", adminError);
-            // Still sign out but let the user know
             await supabase.auth.signOut();
             return { error: `Data wiped but auth identity failed to delete: ${adminError.message}` };
         }
 
-        // Step 5: Sign the user out of the current session
+        // Step 5: Sign the user out
         await supabase.auth.signOut();
 
         return { success: true };
