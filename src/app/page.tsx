@@ -1,6 +1,6 @@
 "use client";
 
-import { submitLog, getLogForDate } from "@/actions/submit-log";
+import { submitLog, getLogForDate, checkTodayLogExists } from "@/actions/submit-log";
 import VibeSelector from "@/components/daily-log/VibeSelector";
 import EmotionChipSelector from "@/components/daily-log/EmotionChipSelector";
 import VoiceToTextButton from "@/components/daily-log/VoiceToTextButton";
@@ -59,6 +59,20 @@ function HomeContent() {
         });
     }, []);
 
+    // Duplicate entry guard: if today's log already exists and not in edit mode, redirect to timeline
+    useEffect(() => {
+        if (isEditMode) return;
+        const today = format(new Date(), "yyyy-MM-dd");
+        checkTodayLogExists(today).then((exists) => {
+            if (exists) {
+                toast("Today's reflection is already captured ✨", {
+                    description: "Use the Edit button on your timeline to make changes.",
+                });
+                router.push("/dashboard");
+            }
+        });
+    }, [isEditMode, router]);
+
     // Edit mode: fetch existing log and pre-fill
     useEffect(() => {
         if (!editDate) return;
@@ -92,7 +106,7 @@ function HomeContent() {
         setIsSubmitting(true);
         try {
             const result = await submitLog({
-                date: new Date().toISOString().split('T')[0],
+                date: format(new Date(), 'yyyy-MM-dd'),
                 metrics: { work: 0, personal: 0, health: 0, sleep: 0 },
                 work: {
                     score: workScore,

@@ -172,3 +172,19 @@ export async function getLogForDate(date: string) {
         },
     };
 }
+
+// Quick check: does today's log already exist?
+export async function checkTodayLogExists(date: string): Promise<boolean> {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return false;
+
+    const { data } = await supabase
+        .from("daily_logs")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("date", date)
+        .maybeSingle();
+
+    return !!data;
+}

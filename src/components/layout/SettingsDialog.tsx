@@ -215,12 +215,21 @@ export default function SettingsDialog() {
                                 disabled={deleteConfirm !== "DELETE" || deleting}
                                 onClick={async () => {
                                     setDeleting(true);
-                                    const result = await deleteAccount();
-                                    if (result.success) {
+                                    try {
+                                        const result = await deleteAccount();
+                                        if (result.error) {
+                                            alert(result.error);
+                                            setDeleting(false);
+                                            return;
+                                        }
+                                        // Success: close dialog and redirect
                                         setOpen(false);
-                                        router.push("/login");
+                                        window.location.href = "/login";
+                                    } catch (err: any) {
+                                        console.error("Delete failed:", err);
+                                        alert("Something went wrong. Please try again.");
+                                        setDeleting(false);
                                     }
-                                    setDeleting(false);
                                 }}
                                 className="w-full flex items-center justify-center gap-2 py-2.5 text-sm text-red-400 bg-red-500/10 hover:bg-red-500/20 rounded-xl transition-all disabled:opacity-30 disabled:cursor-not-allowed border border-red-500/20"
                             >
