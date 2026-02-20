@@ -6,7 +6,7 @@ import EmotionChipSelector from "@/components/daily-log/EmotionChipSelector";
 import VoiceToTextButton from "@/components/daily-log/VoiceToTextButton";
 import SettingsDialog from "@/components/layout/SettingsDialog";
 import { getSettings } from "@/actions/settings";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, ArrowLeft, Check, Sparkles, X } from "lucide-react";
@@ -17,6 +17,14 @@ import { cn } from "@/lib/utils";
 type Step = 1 | 2;
 
 export default function Home() {
+    return (
+        <Suspense>
+            <HomeContent />
+        </Suspense>
+    );
+}
+
+function HomeContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const editDate = searchParams.get("edit");
