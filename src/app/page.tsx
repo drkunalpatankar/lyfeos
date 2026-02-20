@@ -4,7 +4,6 @@ import { submitLog, getLogForDate, checkTodayLogExists } from "@/actions/submit-
 import VibeSelector from "@/components/daily-log/VibeSelector";
 import EmotionChipSelector from "@/components/daily-log/EmotionChipSelector";
 import VoiceToTextButton from "@/components/daily-log/VoiceToTextButton";
-import SettingsDialog from "@/components/layout/SettingsDialog";
 import { getSettings } from "@/actions/settings";
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -157,14 +156,12 @@ function HomeContent() {
                         animate={{ opacity: 1, y: 0 }}
                         className="text-center space-y-3"
                     >
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="w-10" /> {/* Spacer for balance */}
+                        <div className="flex items-center justify-center mb-4">
                             <div className="flex items-center gap-2">
                                 <Sparkles className="w-5 h-5 text-amber-400 animate-pulse" />
                                 <h1 className="text-3xl font-light tracking-wide text-amber-100">LyFeOS</h1>
                                 <Sparkles className="w-5 h-5 text-rose-400 animate-pulse" />
                             </div>
-                            <SettingsDialog />
                         </div>
                         {isEditMode ? (
                             <div className="flex items-center justify-center gap-2">
