@@ -107,7 +107,6 @@ function HomeContent() {
         try {
             const result = await submitLog({
                 date: format(new Date(), 'yyyy-MM-dd'),
-                metrics: { work: 0, personal: 0, health: 0, sleep: 0 },
                 work: {
                     score: workScore,
                     learning: workLearning,
