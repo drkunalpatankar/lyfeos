@@ -25,7 +25,13 @@ export async function deleteAccount() {
 
         const admin = createSupabaseClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            serviceRoleKey
+            serviceRoleKey,
+            {
+                auth: {
+                    autoRefreshToken: false,
+                    persistSession: false,
+                },
+            }
         );
 
         // Step 3: Cascade delete ALL user data using the admin client
@@ -81,6 +87,9 @@ export async function deleteAccount() {
         const { error: adminError } = await admin.auth.admin.deleteUser(user.id);
         if (adminError) {
             console.error("Failed to delete auth identity:", adminError);
+            // Still sign out but let the user know
+            await supabase.auth.signOut();
+            return { error: `Data wiped but auth identity failed to delete: ${adminError.message}` };
         }
 
         // Step 5: Sign the user out of the current session
