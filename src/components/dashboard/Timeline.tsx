@@ -46,14 +46,13 @@ export default function Timeline({ logs }: TimelineProps) {
                                     {format(date, "MMM")}
                                 </span>
 
-                                {/* Edit button — today only */}
+                                {/* Edit icon — today only */}
                                 {editable && (
                                     <Link
                                         href={`/?edit=${log.date}`}
-                                        className="mt-3 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-amber-500/10 border border-amber-500/30 rounded-full text-[10px] uppercase font-semibold tracking-widest text-amber-400 hover:bg-amber-500/20 hover:scale-105 transition-all shadow-[0_0_10px_rgba(245,158,11,0.1)]"
+                                        className="mt-2 w-7 h-7 flex items-center justify-center rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 hover:bg-amber-500/25 hover:scale-110 transition-all shadow-[0_0_12px_rgba(245,158,11,0.15)] animate-pulse"
                                     >
                                         <Pencil className="w-3 h-3" />
-                                        <span>Edit</span>
                                     </Link>
                                 )}
 
