@@ -314,7 +314,7 @@ function HomeContent() {
                             <motion.button
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
-                                onClick={() => setCurrentStep(1)}
+                                onClick={() => { setCurrentStep(1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                                 className="w-full sm:flex-1 py-4 bg-white/5 border border-amber-200/20 text-amber-200 rounded-full font-light flex items-center justify-center gap-2"
                             >
                                 <ArrowLeft className="w-4 h-4" />
@@ -326,7 +326,7 @@ function HomeContent() {
                             <motion.button
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
-                                onClick={() => setCurrentStep(2)}
+                                onClick={() => { setCurrentStep(2); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                                 className="flex-1 py-4 bg-gradient-to-r from-amber-500 to-rose-500 text-white rounded-full font-light flex items-center justify-center gap-2"
                             >
                                 Next
