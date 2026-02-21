@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Sparkles, TrendingUp, Calendar, Target } from "lucide-react";
+import { Sparkles, TrendingUp, Calendar, Target, Search } from "lucide-react";
 import Link from "next/link";
 import Timeline from "@/components/dashboard/Timeline";
+import SearchModal from "@/components/dashboard/SearchModal";
 import { cn } from "@/lib/utils";
 
 // Types for our data
@@ -29,6 +30,7 @@ export default function DashboardPage() {
     const [logs, setLogs] = useState<DailyLog[]>([]);
     const [loading, setLoading] = useState(true);
     const [scrolled, setScrolled] = useState(false);
+    const [searchOpen, setSearchOpen] = useState(false);
     const supabase = createClient();
 
     useEffect(() => {
@@ -163,6 +165,18 @@ export default function DashboardPage() {
                     )}
                 </section>
             </div>
+
+            {/* ═══ SEARCH FAB ═══ */}
+            <button
+                onClick={() => setSearchOpen(true)}
+                className="fixed bottom-20 right-4 z-40 w-12 h-12 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 rounded-full flex items-center justify-center text-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.15)] hover:shadow-[0_0_30px_rgba(245,158,11,0.25)] hover:scale-110 transition-all active:scale-95"
+                title="Search reflections"
+            >
+                <Search className="w-5 h-5" />
+            </button>
+
+            {/* ═══ SEARCH MODAL ═══ */}
+            <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
         </main>
     );
 }
