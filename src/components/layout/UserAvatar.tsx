@@ -3,31 +3,64 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
-import Image from "next/image";
 
 interface UserAvatarProps {
     size?: "sm" | "md" | "lg";
     className?: string;
 }
 
+// Cache key for localStorage
+const AVATAR_CACHE_KEY = "lyfeos_avatar";
+
+interface AvatarCache {
+    avatarUrl: string | null;
+    initial: string;
+    timestamp: number;
+}
+
 export default function UserAvatar({ size = "sm", className }: UserAvatarProps) {
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
     const [initial, setInitial] = useState("U");
+    const [loaded, setLoaded] = useState(false);
 
     useEffect(() => {
+        // 1. Try localStorage cache first (instant, no network)
+        try {
+            const cached = localStorage.getItem(AVATAR_CACHE_KEY);
+            if (cached) {
+                const data: AvatarCache = JSON.parse(cached);
+                // Cache valid for 1 hour
+                if (Date.now() - data.timestamp < 3600000) {
+                    setAvatarUrl(data.avatarUrl);
+                    setInitial(data.initial);
+                    setLoaded(true);
+                    return; // Skip network call entirely
+                }
+            }
+        } catch { }
+
+        // 2. Fetch from Supabase (only on first load or expired cache)
         const supabase = createClient();
         supabase.auth.getUser().then(({ data: { user } }) => {
             if (!user) return;
 
-            // Google OAuth: avatar_url and full_name in user_metadata
             const meta = user.user_metadata;
-            if (meta?.avatar_url) {
-                setAvatarUrl(meta.avatar_url);
-            }
-
-            // Fallback initial: from full_name, display_name, or email
+            const url = meta?.avatar_url || null;
             const name = meta?.full_name || meta?.name || user.email || "U";
-            setInitial(name.charAt(0).toUpperCase());
+            const ini = name.charAt(0).toUpperCase();
+
+            setAvatarUrl(url);
+            setInitial(ini);
+            setLoaded(true);
+
+            // Cache for future navigations
+            try {
+                localStorage.setItem(AVATAR_CACHE_KEY, JSON.stringify({
+                    avatarUrl: url,
+                    initial: ini,
+                    timestamp: Date.now(),
+                } as AvatarCache));
+            } catch { }
         });
     }, []);
 
