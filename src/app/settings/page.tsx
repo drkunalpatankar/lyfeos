@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Globe, Stethoscope, Check, LogOut, Trash2, ArrowLeft, Shield } from "lucide-react";
+import { Globe, Stethoscope, Check, LogOut, Trash2, ArrowLeft, Shield, KeyRound, Delete } from "lucide-react";
 import { motion } from "framer-motion";
 import { deleteAccount } from "@/actions/delete-account";
 import { updateSettings, getSettings, type Language, type Style } from "@/actions/settings";
+import { changePin } from "@/actions/pin";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import UserAvatar from "@/components/layout/UserAvatar";
@@ -210,11 +211,24 @@ export default function SettingsPage() {
                         </button>
                     </motion.div>
 
-                    {/* Legal & Privacy */}
+                    {/* Change PIN */}
                     <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.15 }}
+                        className="glass-warm rounded-2xl p-5 border border-white/5 space-y-3"
+                    >
+                        <h2 className="text-xs uppercase tracking-widest text-amber-200/40 font-semibold">
+                            Security
+                        </h2>
+                        <ChangePinSection />
+                    </motion.div>
+
+                    {/* Legal & Privacy */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
                         className="glass-warm rounded-2xl p-5 border border-white/5 space-y-2"
                     >
                         <h2 className="text-xs uppercase tracking-widest text-amber-200/40 font-semibold mb-3">
@@ -306,4 +320,149 @@ function SparklesIcon({ className }: { className?: string }) {
     return (
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" /><path d="M5 3v4" /><path d="M9 9v4" /><path d="M5 13V9" /><path d="M1 9h4" /></svg>
     )
+}
+
+function ChangePinSection() {
+    const [step, setStep] = useState<"idle" | "current" | "new" | "confirm">("idle");
+    const [pin, setPin] = useState("");
+    const [newPinValue, setNewPinValue] = useState("");
+    const [error, setError] = useState("");
+    const [success, setSuccess] = useState(false);
+    const [saving, setSaving] = useState(false);
+
+    const reset = () => {
+        setStep("idle");
+        setPin("");
+        setNewPinValue("");
+        setError("");
+    };
+
+    const handleDigit = useCallback((digit: string) => {
+        if (saving || pin.length >= 4) return;
+        const newPin = pin + digit;
+        setPin(newPin);
+        setError("");
+
+        if (newPin.length === 4) {
+            if (step === "current") {
+                // Will verify when submitting final
+                setNewPinValue("");
+                setTimeout(() => { setStep("new"); setPin(""); }, 200);
+            } else if (step === "new") {
+                setNewPinValue(newPin);
+                setTimeout(() => { setStep("confirm"); setPin(""); }, 200);
+            } else if (step === "confirm") {
+                if (newPin === newPinValue) {
+                    // Get current pin from the flow — we need to re-ask
+                    // Actually we need to store currentPin too
+                    setSaving(true);
+                } else {
+                    setError("PINs don't match");
+                    setTimeout(() => { setStep("new"); setPin(""); setError(""); }, 800);
+                }
+            }
+        }
+    }, [pin, step, newPinValue, saving]);
+
+    const handleDelete = useCallback(() => {
+        if (saving) return;
+        setPin(prev => prev.slice(0, -1));
+        setError("");
+    }, [saving]);
+
+    // We need to track current PIN through the flow
+    const [currentPinValue, setCurrentPinValue] = useState("");
+
+    // Override handleDigit to track current PIN
+    const handleDigitFull = useCallback((digit: string) => {
+        if (saving || pin.length >= 4) return;
+        const newPin = pin + digit;
+        setPin(newPin);
+        setError("");
+
+        if (newPin.length === 4) {
+            if (step === "current") {
+                setCurrentPinValue(newPin);
+                setTimeout(() => { setStep("new"); setPin(""); }, 200);
+            } else if (step === "new") {
+                setNewPinValue(newPin);
+                setTimeout(() => { setStep("confirm"); setPin(""); }, 200);
+            } else if (step === "confirm") {
+                if (newPin === newPinValue) {
+                    setSaving(true);
+                    changePin(currentPinValue, newPin).then(({ success: ok, error: err }) => {
+                        setSaving(false);
+                        if (ok) {
+                            setSuccess(true);
+                            setTimeout(() => { reset(); setSuccess(false); }, 2000);
+                        } else {
+                            setError(err || "Failed to change PIN");
+                            setTimeout(() => { reset(); }, 1500);
+                        }
+                    });
+                } else {
+                    setError("PINs don't match");
+                    setTimeout(() => { setStep("new"); setPin(""); setNewPinValue(""); setError(""); }, 800);
+                }
+            }
+        }
+    }, [pin, step, newPinValue, currentPinValue, saving]);
+
+    if (step === "idle") {
+        return (
+            <button
+                onClick={() => setStep("current")}
+                className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-all text-amber-200/60 hover:text-amber-100 w-full text-left"
+            >
+                <KeyRound className="w-4 h-4" />
+                <span className="text-sm">{success ? "PIN Updated ✓" : "Change PIN"}</span>
+            </button>
+        );
+    }
+
+    const labels = { current: "Enter current PIN", new: "Enter new PIN", confirm: "Confirm new PIN" };
+
+    return (
+        <div className="space-y-3">
+            <p className="text-sm text-amber-200/50">{labels[step]}</p>
+            {error && <p className="text-xs text-red-400/70">{error}</p>}
+
+            {/* Dots */}
+            <motion.div
+                className="flex gap-3 justify-center"
+                animate={error ? { x: [0, -8, 8, -4, 4, 0] } : {}}
+                transition={{ duration: 0.3 }}
+            >
+                {[0, 1, 2, 3].map(i => (
+                    <div key={i} className={cn(
+                        "w-3 h-3 rounded-full border-2 transition-all",
+                        i < pin.length
+                            ? error ? "bg-red-400 border-red-400" : "bg-amber-400 border-amber-400"
+                            : "border-amber-500/30"
+                    )} />
+                ))}
+            </motion.div>
+
+            {/* Compact numpad */}
+            <div className="grid grid-cols-3 gap-1.5 max-w-[200px] mx-auto">
+                {["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "del"].map((d, idx) => {
+                    if (d === "") return <div key={idx} />;
+                    if (d === "del") return (
+                        <button key={idx} onClick={handleDelete} className="h-10 rounded-lg flex items-center justify-center text-amber-200/30 hover:text-amber-200/60 transition-all active:scale-90">
+                            <Delete className="w-4 h-4" />
+                        </button>
+                    );
+                    return (
+                        <button key={idx} onClick={() => handleDigitFull(d)} disabled={saving}
+                            className="h-10 rounded-lg bg-white/[0.03] border border-white/[0.05] text-sm text-amber-100 hover:bg-white/[0.07] active:bg-amber-500/20 active:scale-95 transition-all disabled:opacity-30"
+                        >{d}</button>
+                    );
+                })}
+            </div>
+
+            <button onClick={reset} className="text-[10px] text-amber-200/20 hover:text-amber-200/40 transition-colors w-full text-center">
+                Cancel
+            </button>
+        </div>
+    );
 }

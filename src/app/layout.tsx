@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { Toaster } from "sonner";
 import BottomNav from "@/components/layout/BottomNav";
+import PinGate from "@/components/lock/PinGate";
 import "./globals.css";
 
 const inter = Inter({
@@ -92,8 +93,10 @@ export default function RootLayout({
                         })
                     }}
                 />
-                {children}
-                <BottomNav />
+                <PinGate>
+                    {children}
+                    <BottomNav />
+                </PinGate>
                 <Toaster
                     theme="dark"
                     position="top-center"
