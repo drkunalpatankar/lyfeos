@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { Toaster } from "sonner";
 import BottomNav from "@/components/layout/BottomNav";
+import AutoDigestRunner from "@/components/layout/AutoDigestRunner";
 import PinGate from "@/components/lock/PinGate";
 import "./globals.css";
 
@@ -96,6 +97,7 @@ export default function RootLayout({
                 <PinGate>
                     {children}
                     <BottomNav />
+                    <AutoDigestRunner />
                 </PinGate>
                 <Toaster
                     theme="dark"

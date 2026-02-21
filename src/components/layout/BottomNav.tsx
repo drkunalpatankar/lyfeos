@@ -1,10 +1,12 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { PenLine, TrendingUp, Brain, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 import UserAvatar from "@/components/layout/UserAvatar";
+import { hasUnseenDigest, clearDigestBadge } from "@/components/layout/AutoDigestRunner";
 
 const navItems = [
     { href: "/", label: "Log", icon: PenLine },
@@ -15,9 +17,28 @@ const navItems = [
 
 export default function BottomNav() {
     const pathname = usePathname();
+    const [showBadge, setShowBadge] = useState(false);
 
     // Don't show on public/legal pages
     if (["/login", "/privacy", "/terms"].includes(pathname)) return null;
+
+    // Check for digest badge
+    useEffect(() => {
+        const checkBadge = () => setShowBadge(hasUnseenDigest());
+        checkBadge();
+
+        // Listen for badge updates from AutoDigestRunner
+        window.addEventListener("digest-badge-update", checkBadge);
+        return () => window.removeEventListener("digest-badge-update", checkBadge);
+    }, []);
+
+    // Clear badge when user visits digest page
+    useEffect(() => {
+        if (pathname === "/digest" && showBadge) {
+            clearDigestBadge();
+            setShowBadge(false);
+        }
+    }, [pathname, showBadge]);
 
     const isSettingsActive = pathname === "/settings";
 
@@ -27,18 +48,24 @@ export default function BottomNav() {
                 {navItems.map((item) => {
                     const isActive = pathname === item.href;
                     const Icon = item.icon;
+                    const isIntel = item.href === "/digest";
                     return (
                         <Link
                             key={item.href}
                             href={item.href}
                             className={cn(
-                                "flex flex-col items-center justify-center gap-1 transition-all",
+                                "flex flex-col items-center justify-center gap-1 transition-all relative",
                                 isActive
                                     ? "text-amber-400"
                                     : "text-amber-200/40 hover:text-amber-200/70"
                             )}
                         >
-                            <Icon className={cn("w-5 h-5", isActive && "drop-shadow-[0_0_6px_rgba(245,158,11,0.5)]")} />
+                            <div className="relative">
+                                <Icon className={cn("w-5 h-5", isActive && "drop-shadow-[0_0_6px_rgba(245,158,11,0.5)]")} />
+                                {isIntel && showBadge && (
+                                    <span className="absolute -top-1 -right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border border-black/80 animate-pulse shadow-[0_0_6px_rgba(239,68,68,0.6)]" />
+                                )}
+                            </div>
                             <span className="text-[9px] uppercase tracking-widest font-medium">{item.label}</span>
                         </Link>
                     );
