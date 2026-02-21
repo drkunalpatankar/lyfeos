@@ -7,6 +7,7 @@ import { PenLine, TrendingUp, Brain, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 import UserAvatar from "@/components/layout/UserAvatar";
 import { hasUnseenDigest, clearDigestBadge } from "@/components/layout/AutoDigestRunner";
+import { createClient } from "@/lib/supabase/client";
 
 const navItems = [
     { href: "/", label: "Log", icon: PenLine },
@@ -15,19 +16,26 @@ const navItems = [
     { href: "/digest", label: "Intel", icon: Brain },
 ];
 
+const HIDDEN_PATHS = ["/login", "/privacy", "/terms"];
+
 export default function BottomNav() {
     const pathname = usePathname();
     const [showBadge, setShowBadge] = useState(false);
+    const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
-    // Don't show on public/legal pages
-    if (["/login", "/privacy", "/terms"].includes(pathname)) return null;
+    // Check auth state
+    useEffect(() => {
+        const supabase = createClient();
+        supabase.auth.getUser().then(({ data: { user } }) => {
+            setIsAuthenticated(!!user);
+        });
+    }, []);
 
     // Check for digest badge
     useEffect(() => {
         const checkBadge = () => setShowBadge(hasUnseenDigest());
         checkBadge();
 
-        // Listen for badge updates from AutoDigestRunner
         window.addEventListener("digest-badge-update", checkBadge);
         return () => window.removeEventListener("digest-badge-update", checkBadge);
     }, []);
@@ -39,6 +47,11 @@ export default function BottomNav() {
             setShowBadge(false);
         }
     }, [pathname, showBadge]);
+
+    // Don't show on public/legal pages or for unauthenticated visitors
+    if (HIDDEN_PATHS.includes(pathname)) return null;
+    if (isAuthenticated === null) return null; // Still checking
+    if (!isAuthenticated) return null; // Visitor on landing page
 
     const isSettingsActive = pathname === "/settings";
 

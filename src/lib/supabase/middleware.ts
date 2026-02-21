@@ -35,7 +35,7 @@ export async function updateSession(request: NextRequest) {
         data: { user },
     } = await supabase.auth.getUser()
 
-    const publicPaths = ['/login', '/privacy', '/terms', '/auth/callback']
+    const publicPaths = ['/', '/login', '/privacy', '/terms', '/auth/callback']
     const isPublicPath = publicPaths.includes(request.nextUrl.pathname)
 
     // If user IS NOT logged in and trying to access a protected route

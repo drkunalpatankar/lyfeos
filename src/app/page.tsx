@@ -4,6 +4,7 @@ import { submitLog, getLogForDate, checkTodayLogExists } from "@/actions/submit-
 import VibeSelector from "@/components/daily-log/VibeSelector";
 import EmotionChipSelector from "@/components/daily-log/EmotionChipSelector";
 import VoiceToTextButton from "@/components/daily-log/VoiceToTextButton";
+import LandingPage from "@/components/landing/LandingPage";
 import { getSettings } from "@/actions/settings";
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -13,10 +14,32 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
 
 type Step = 1 | 2;
 
 export default function Home() {
+    const [authState, setAuthState] = useState<"loading" | "authenticated" | "visitor">("loading");
+
+    useEffect(() => {
+        const supabase = createClient();
+        supabase.auth.getUser().then(({ data: { user } }) => {
+            setAuthState(user ? "authenticated" : "visitor");
+        });
+    }, []);
+
+    if (authState === "loading") {
+        return (
+            <main className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+                <div className="w-6 h-6 border-2 border-amber-500/30 border-t-amber-400 rounded-full animate-spin" />
+            </main>
+        );
+    }
+
+    if (authState === "visitor") {
+        return <LandingPage />;
+    }
+
     return (
         <Suspense>
             <HomeContent />
