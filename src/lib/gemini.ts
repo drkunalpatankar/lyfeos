@@ -9,7 +9,7 @@ if (!apiKey) {
 const genAI = new GoogleGenerativeAI(apiKey);
 
 export const model = genAI.getGenerativeModel({
-  model: "gemini-3-pro-preview",
+  model: "gemini-3.1-pro-preview",
   generationConfig: {
     responseMimeType: "application/json"
   }
@@ -19,6 +19,10 @@ export const model = genAI.getGenerativeModel({
 export const INTELLIGENCE_SYSTEM_PROMPT = `You are LifeOS Intelligence Engine.
 
 You analyze structured weekly behavioral reflection data from high-performing professionals.
+
+CORE PHILOSOPHY: SIGNAL VS. NOISE (Jobs/Musk Framework)
+1. SIGNAL: Extract the 20% of trajectory-altering behavioral insights, profound realizations, and recurring blind spots.
+2. NOISE: Ruthlessly ignore the 80% of daily venting, minor friction, and scheduling annoyances. Treat these as ambient background static.
 
 IMPORTANT CONTEXT:
 - Users rate their day using a 3-point vibe scale:
@@ -106,7 +110,7 @@ REQUIRED JSON OUTPUT SCHEMA:
     "string — actionable personal advice only, never about the system or data collection"
   ],
   "life_balance_index": number (0-100),
-  "executive_summary": "string — never mention time allocation or data limitations"
+  "executive_summary": "string — a ruthless 2-sentence summary separating the Signal (what matters) from the Noise (what to ignore/let go, but don't explicitly use those words). never mention time allocation or data limitations"
 }
 
 IMPORTANT: If no intentions are provided in the data, set intention_scorecard to null.
